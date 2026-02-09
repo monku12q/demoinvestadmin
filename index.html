@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CryptoWealth Pro - Admin Panel</title>
+    <title>CryptoWealth Pro - Admin Dashboard</title>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -14,16 +14,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #0a0a1a;
-            --secondary: #00ff88;
-            --accent: #8a2be2;
-            --danger: #ff375f;
-            --warning: #ffaa00;
-            --info: #00d4ff;
-            --card-bg: rgba(20, 20, 40, 0.95);
-            --gradient: linear-gradient(135deg, #0a0a1a 0%, #151530 100%);
-            --gradient-accent: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
-            --shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+            --admin-primary: #0f172a;
+            --admin-secondary: #1e293b;
+            --admin-accent: #3b82f6;
+            --admin-success: #10b981;
+            --admin-warning: #f59e0b;
+            --admin-danger: #ef4444;
+            --admin-info: #06b6d4;
+            --admin-text: #f1f5f9;
+            --admin-text-light: #cbd5e1;
+            --admin-border: #334155;
+            --admin-card: rgba(30, 41, 59, 0.8);
+            --admin-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --admin-gradient-accent: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            --admin-gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --admin-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            --admin-glass: rgba(30, 41, 59, 0.7);
+            --admin-glass-border: rgba(255, 255, 255, 0.1);
         }
 
         * {
@@ -34,166 +41,429 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--gradient);
-            color: white;
+            background: var(--admin-gradient);
+            color: var(--admin-text);
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         h1, h2, h3, h4 {
             font-family: 'Orbitron', sans-serif;
             margin-bottom: 1rem;
+            font-weight: 600;
         }
 
-        .container {
-            width: 95%;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 15px;
+        /* Loading Screen */
+        .admin-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--admin-gradient);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
         }
 
-        /* Admin Login */
-        .admin-login {
+        .admin-loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--admin-accent);
+            animation: spin 1s linear infinite;
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Login Screen */
+        .login-screen {
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: var(--gradient);
+            padding: 1rem;
+            background: var(--admin-gradient);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-screen::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .login-container {
-            background: var(--card-bg);
+            background: var(--admin-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--admin-glass-border);
+            border-radius: 20px;
             padding: 3rem;
-            border-radius: 15px;
-            border: 1px solid var(--secondary);
             width: 100%;
-            max-width: 400px;
-            box-shadow: var(--shadow);
+            max-width: 450px;
+            box-shadow: var(--admin-shadow);
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.5s ease;
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-logo h1 {
+            font-size: 2rem;
+            background: var(--admin-gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-logo p {
+            color: var(--admin-text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Admin Panel */
         .admin-panel {
-            min-height: 100vh;
             display: none;
+            min-height: 100vh;
         }
 
-        /* Header */
+        /* Admin Header */
         .admin-header {
-            background: rgba(10, 10, 26, 0.98);
-            padding: 1rem 0;
-            border-bottom: 1px solid var(--secondary);
+            background: var(--admin-card);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--admin-glass-border);
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 1000;
+            padding: 1rem 0;
         }
 
         .admin-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 0 1rem;
         }
 
-        .admin-logo {
-            font-family: 'Orbitron', sans-serif;
+        .admin-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .admin-brand h1 {
             font-size: 1.5rem;
-            background: var(--gradient-accent);
+            margin: 0;
+            background: var(--admin-gradient-accent);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        /* Sidebar */
+        .admin-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .admin-user {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .admin-user i {
+            color: var(--admin-accent);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--admin-text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        /* Admin Sidebar */
         .admin-sidebar {
             width: 250px;
-            background: rgba(10, 10, 26, 0.95);
+            background: var(--admin-card);
+            border-right: 1px solid var(--admin-glass-border);
             position: fixed;
             top: 70px;
             left: 0;
             height: calc(100vh - 70px);
             overflow-y: auto;
             padding: 1.5rem 1rem;
-            border-right: 1px solid rgba(0, 255, 136, 0.2);
+            transition: transform 0.3s ease;
+            z-index: 999;
         }
 
         .sidebar-menu {
             list-style: none;
         }
 
-        .sidebar-menu li {
+        .sidebar-item {
             margin-bottom: 0.5rem;
         }
 
-        .sidebar-menu a {
+        .sidebar-link {
             display: flex;
             align-items: center;
             gap: 0.8rem;
             padding: 0.8rem 1rem;
-            color: white;
+            color: var(--admin-text-light);
             text-decoration: none;
             border-radius: 8px;
             transition: all 0.3s;
+            font-size: 0.95rem;
         }
 
-        .sidebar-menu a:hover {
-            background: rgba(0, 255, 136, 0.1);
+        .sidebar-link:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--admin-text);
+            transform: translateX(5px);
         }
 
-        .sidebar-menu a.active {
-            background: var(--gradient-accent);
-            color: var(--primary);
-            font-weight: bold;
+        .sidebar-link.active {
+            background: var(--admin-gradient-accent);
+            color: white;
+            box-shadow: var(--admin-shadow);
         }
 
-        /* Main Content */
+        .sidebar-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Admin Main Content */
         .admin-main {
             margin-left: 250px;
             margin-top: 70px;
             padding: 2rem;
             min-height: calc(100vh - 70px);
+            transition: margin-left 0.3s ease;
         }
 
-        /* Dashboard Grid */
-        .dashboard-stats {
+        /* Dashboard Stats */
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
 
         .stat-card {
-            background: var(--card-bg);
+            background: var(--admin-card);
+            border-radius: 15px;
             padding: 1.5rem;
-            border-radius: 12px;
-            border: 1px solid rgba(0, 255, 136, 0.2);
+            border: 1px solid var(--admin-glass-border);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--admin-shadow);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            background: var(--admin-gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .stat-value {
             font-size: 2rem;
-            font-weight: bold;
-            color: var(--secondary);
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
             margin-bottom: 0.5rem;
         }
 
+        .stat-title {
+            color: var(--admin-text-light);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
         /* Tables */
-        .data-table {
-            width: 100%;
-            background: var(--card-bg);
-            border-radius: 10px;
+        .admin-table-container {
+            background: var(--admin-card);
+            border-radius: 15px;
+            border: 1px solid var(--admin-glass-border);
             overflow: hidden;
             margin-top: 1rem;
         }
 
-        .data-table th {
-            background: rgba(0, 255, 136, 0.2);
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .admin-table thead {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .admin-table th {
             padding: 1rem;
             text-align: left;
+            font-weight: 600;
+            color: var(--admin-accent);
+            border-bottom: 1px solid var(--admin-border);
         }
 
-        .data-table td {
-            padding: 0.8rem 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        .admin-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--admin-border);
         }
 
-        .data-table tr:hover {
-            background: rgba(0, 255, 136, 0.05);
+        .admin-table tbody tr:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .admin-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--admin-success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--admin-warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--admin-danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .badge-info {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--admin-info);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .badge-primary {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--admin-accent);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--admin-gradient-accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-success {
+            background: var(--admin-gradient-success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
         }
 
         /* Forms */
@@ -201,25 +471,29 @@
             margin-bottom: 1.5rem;
         }
 
-        .form-group label {
+        .form-label {
             display: block;
             margin-bottom: 0.5rem;
+            color: var(--admin-text);
             font-weight: 500;
         }
 
         .form-control {
             width: 100%;
             padding: 0.8rem;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(0, 255, 136, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--admin-border);
             border-radius: 8px;
-            color: white;
-            font-size: 1rem;
+            color: var(--admin-text);
+            font-size: 0.95rem;
+            transition: all 0.3s;
         }
 
         .form-control:focus {
             outline: none;
-            border-color: var(--secondary);
+            border-color: var(--admin-accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            background: rgba(255, 255, 255, 0.1);
         }
 
         /* Tabs */
@@ -228,67 +502,38 @@
             gap: 0.5rem;
             margin-bottom: 2rem;
             overflow-x: auto;
+            padding-bottom: 0.5rem;
         }
 
         .tab-btn {
             padding: 0.8rem 1.5rem;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: white;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: var(--admin-text-light);
             border-radius: 8px;
             cursor: pointer;
             white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--admin-text);
         }
 
         .tab-btn.active {
-            background: var(--gradient-accent);
-            color: var(--primary);
+            background: var(--admin-gradient-accent);
+            color: white;
+            border-color: var(--admin-accent);
         }
 
         .tab-content {
             display: none;
+            animation: fadeIn 0.5s ease;
         }
 
         .tab-content.active {
             display: block;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 0.8rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s;
-        }
-
-        .btn-primary {
-            background: var(--gradient-accent);
-            color: var(--primary);
-        }
-
-        .btn-success {
-            background: var(--secondary);
-            color: var(--primary);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: var(--primary);
-        }
-
-        .btn-small {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.9rem;
         }
 
         /* Modal */
@@ -298,11 +543,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(15, 23, 42, 0.95);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 2000;
+            backdrop-filter: blur(5px);
+            padding: 1rem;
         }
 
         .modal.active {
@@ -310,39 +557,94 @@
         }
 
         .modal-content {
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 500px;
-            border: 1px solid var(--secondary);
-        }
-
-        /* Status Badges */
-        .badge {
-            padding: 0.3rem 0.8rem;
+            background: var(--admin-card);
             border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--admin-glass-border);
+            box-shadow: var(--admin-shadow);
+            position: relative;
         }
 
-        .badge-success {
-            background: rgba(0, 255, 136, 0.2);
-            color: var(--secondary);
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--admin-border);
         }
 
-        .badge-warning {
-            background: rgba(255, 170, 0, 0.2);
-            color: var(--warning);
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--admin-text-light);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.3s;
         }
 
-        .badge-danger {
-            background: rgba(255, 55, 95, 0.2);
-            color: var(--danger);
+        .close-modal:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--admin-danger);
         }
 
-        /* Responsive */
-        @media (max-width: 1024px) {
+        /* Notifications */
+        .notification-container {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 3000;
+        }
+
+        .notification {
+            background: var(--admin-card);
+            border-left: 4px solid var(--admin-accent);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: var(--admin-shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification i {
+            font-size: 1.2rem;
+        }
+
+        .notification.success {
+            border-left-color: var(--admin-success);
+        }
+
+        .notification.success i {
+            color: var(--admin-success);
+        }
+
+        .notification.error {
+            border-left-color: var(--admin-danger);
+        }
+
+        .notification.error i {
+            color: var(--admin-danger);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
             .admin-sidebar {
                 width: 220px;
             }
@@ -351,37 +653,285 @@
             }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
             .admin-sidebar {
-                width: 100%;
-                position: static;
-                height: auto;
+                transform: translateX(-100%);
+                width: 280px;
             }
+            
+            .admin-sidebar.active {
+                transform: translateX(0);
+            }
+            
             .admin-main {
                 margin-left: 0;
-                margin-top: 1rem;
             }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .modal-content {
+                padding: 1.5rem;
+            }
+            
+            .login-container {
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .admin-nav {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .admin-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .admin-main {
+                padding: 1rem;
+            }
+            
+            .admin-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab-btn {
+                flex: 1;
+                min-width: 120px;
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--admin-text-light);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Loading State */
+        .loading-state {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--admin-accent);
+            animation: spin 1s linear infinite;
+        }
+
+        /* Search and Filter */
+        .search-filter {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-select {
+            min-width: 150px;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Date Range */
+        .date-range {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .date-input {
+            flex: 1;
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--admin-border);
+        }
+
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .quick-stat {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .quick-stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--admin-accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-stat-label {
+            font-size: 0.85rem;
+            color: var(--admin-text-light);
+        }
+
+        /* Color Classes */
+        .text-success {
+            color: var(--admin-success);
+        }
+
+        .text-warning {
+            color: var(--admin-warning);
+        }
+
+        .text-danger {
+            color: var(--admin-danger);
+        }
+
+        .text-primary {
+            color: var(--admin-accent);
+        }
+
+        .text-info {
+            color: var(--admin-info);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--admin-accent);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2563eb;
+        }
+
+        /* Glass Effect */
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Hover Effects */
+        .hover-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--admin-shadow);
+        }
+
+        /* Fade Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* Pulse Animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
         }
     </style>
 </head>
 <body>
-    <!-- Admin Login Screen -->
-    <div class="admin-login" id="adminLogin">
+    <!-- Loading Screen -->
+    <div class="admin-loading" id="adminLoading">
+        <div class="admin-loader"></div>
+        <h2>Loading Admin Dashboard</h2>
+        <p>Connecting to secure database...</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
         <div class="login-container">
-            <h2 style="text-align: center; margin-bottom: 2rem;">
-                <i class="fas fa-lock"></i> Admin Login
-            </h2>
+            <div class="login-logo">
+                <h1><i class="fas fa-shield-alt"></i> CryptoWealth Admin</h1>
+                <p>Secure Admin Dashboard</p>
+            </div>
+            
             <div class="form-group">
-                <label>Admin Email</label>
+                <label class="form-label">Admin Email</label>
                 <input type="email" class="form-control" id="adminEmail" placeholder="admin@cryptowealth.pro">
             </div>
+            
             <div class="form-group">
-                <label>Password</label>
+                <label class="form-label">Password</label>
                 <input type="password" class="form-control" id="adminPassword" placeholder="••••••••">
             </div>
+            
             <button class="btn btn-primary" style="width: 100%;" onclick="adminLogin()">
-                <i class="fas fa-sign-in-alt"></i> Login
+                <i class="fas fa-sign-in-alt"></i> Login to Dashboard
             </button>
+            
+            <div style="text-align: center; margin-top: 1.5rem; color: var(--admin-text-light); font-size: 0.9rem;">
+                <i class="fas fa-lock"></i> Secure Access Only
+            </div>
         </div>
     </div>
 
@@ -389,203 +939,222 @@
     <div class="admin-panel" id="adminPanel">
         <!-- Header -->
         <header class="admin-header">
-            <div class="container">
-                <nav class="admin-nav">
-                    <div class="admin-logo">
-                        <i class="fas fa-shield-alt"></i> CryptoWealth Admin
+            <div class="admin-nav">
+                <div class="admin-brand">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1><i class="fas fa-shield-alt"></i> Admin Panel</h1>
+                </div>
+                
+                <div class="admin-controls">
+                    <div class="admin-user">
+                        <i class="fas fa-user-shield"></i>
+                        <span id="adminName">Administrator</span>
                     </div>
-                    <div style="display: flex; gap: 1rem; align-items: center;">
-                        <span id="adminName">Admin</span>
-                        <button class="btn btn-danger btn-small" onclick="adminLogout()">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </button>
-                    </div>
-                </nav>
+                    <button class="btn btn-danger btn-sm" onclick="adminLogout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
             </div>
         </header>
 
         <!-- Sidebar -->
-        <div class="admin-sidebar">
+        <div class="admin-sidebar" id="adminSidebar">
             <ul class="sidebar-menu">
-                <li><a href="#" class="active" onclick="showTab('dashboard')">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </a></li>
-                <li><a href="#" onclick="showTab('plans')">
-                    <i class="fas fa-chart-line"></i> Investment Plans
-                </a></li>
-                <li><a href="#" onclick="showTab('rewards')">
-                    <i class="fas fa-trophy"></i> Leadership Rewards
-                </a></li>
-                <li><a href="#" onclick="showTab('commission')">
-                    <i class="fas fa-layer-group"></i> Commission Levels
-                </a></li>
-                <li><a href="#" onclick="showTab('deposits')">
-                    <i class="fas fa-arrow-down"></i> Deposit Requests
-                </a></li>
-                <li><a href="#" onclick="showTab('withdrawals')">
-                    <i class="fas fa-arrow-up"></i> Withdrawal Requests
-                </a></li>
-                <li><a href="#" onclick="showTab('settings')">
-                    <i class="fas fa-cog"></i> System Settings
-                </a></li>
-                <li><a href="#" onclick="showTab('users')">
-                    <i class="fas fa-users"></i> All Users
-                </a></li>
-                <li><a href="#" onclick="showTab('transactions')">
-                    <i class="fas fa-exchange-alt"></i> All Transactions
-                </a></li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link active" onclick="showTab('dashboard')">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showTab('deposits')">
+                        <i class="fas fa-arrow-down"></i> Deposit Requests
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showTab('withdrawals')">
+                        <i class="fas fa-arrow-up"></i> Withdrawal Requests
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showTab('users')">
+                        <i class="fas fa-users"></i> User Management
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showTab('transactions')">
+                        <i class="fas fa-exchange-alt"></i> All Transactions
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showTab('plans')">
+                        <i class="fas fa-chart-line"></i> Investment Plans
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showTab('rewards')">
+                        <i class="fas fa-trophy"></i> Leadership Rewards
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showTab('commission')">
+                        <i class="fas fa-layer-group"></i> Commission Levels
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showTab('settings')">
+                        <i class="fas fa-cog"></i> System Settings
+                    </a>
+                </li>
             </ul>
         </div>
 
         <!-- Main Content -->
-        <main class="admin-main">
+        <main class="admin-main" id="adminMain">
             <!-- Dashboard Tab -->
             <div id="dashboard" class="tab-content active">
-                <h2><i class="fas fa-tachometer-alt"></i> Dashboard Overview</h2>
-                
-                <div class="dashboard-stats">
-                    <div class="stat-card">
-                        <div class="stat-value" id="totalUsers">0</div>
-                        <div>Total Users</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="totalDeposits">0 USDT</div>
-                        <div>Total Deposits</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="totalWithdrawals">0 USDT</div>
-                        <div>Total Withdrawals</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="pendingRequests">0</div>
-                        <div>Pending Requests</div>
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
-                    <div>
-                        <h3><i class="fas fa-chart-bar"></i> Recent Activity</h3>
-                        <div id="recentActivity" style="margin-top: 1rem;">
-                            Loading...
+                <div class="section-header">
+                    <h2><i class="fas fa-tachometer-alt"></i> Dashboard Overview</h2>
+                    <div class="date-range">
+                        <div class="date-input">
+                            <input type="date" class="form-control" id="startDate">
                         </div>
-                    </div>
-                    <div>
-                        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
-                        <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
-                            <button class="btn btn-primary" onclick="showTab('plans')">
-                                <i class="fas fa-plus"></i> Add New Plan
-                            </button>
-                            <button class="btn btn-success" onclick="showTab('rewards')">
-                                <i class="fas fa-gift"></i> Add New Reward
-                            </button>
-                            <button class="btn" onclick="showTab('deposits')">
-                                <i class="fas fa-check-circle"></i> Process Requests
-                            </button>
-                            <button class="btn btn-warning" onclick="showTab('settings')">
-                                <i class="fas fa-cog"></i> Update Settings
-                            </button>
+                        <div class="date-input">
+                            <input type="date" class="form-control" id="endDate">
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Investment Plans Tab -->
-            <div id="plans" class="tab-content">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <h2><i class="fas fa-chart-line"></i> Investment Plans Management</h2>
-                    <button class="btn btn-primary" onclick="openPlanModal()">
-                        <i class="fas fa-plus"></i> Add New Plan
-                    </button>
-                </div>
-
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Plan Name</th>
-                            <th>Min-Max ($)</th>
-                            <th>Daily %</th>
-                            <th>Days</th>
-                            <th>Total Return</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="plansTable">
-                        <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading plans...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Leadership Rewards Tab -->
-            <div id="rewards" class="tab-content">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <h2><i class="fas fa-trophy"></i> Leadership Rewards Management</h2>
-                    <button class="btn btn-primary" onclick="openRewardModal()">
-                        <i class="fas fa-plus"></i> Add New Reward
-                    </button>
-                </div>
-
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Reward Name</th>
-                            <th>Self Business ($)</th>
-                            <th>Team Business ($)</th>
-                            <th>Type</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="rewardsTable">
-                        <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading rewards...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Commission Levels Tab -->
-            <div id="commission" class="tab-content">
-                <h2><i class="fas fa-layer-group"></i> Commission Levels Configuration</h2>
-                
-                <div style="background: rgba(0,255,136,0.1); padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem;">
-                    <p><i class="fas fa-info-circle"></i> Configure commission percentages for each level (1-9)</p>
-                </div>
-
-                <div id="commissionLevelsForm">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
-                        <!-- Levels will be generated dynamically -->
-                    </div>
-                    
-                    <div style="margin-top: 2rem;">
-                        <button class="btn btn-success" onclick="saveCommissionLevels()">
-                            <i class="fas fa-save"></i> Save Commission Settings
+                        <button class="btn btn-primary" onclick="filterDashboard()">
+                            <i class="fas fa-filter"></i> Filter
                         </button>
                     </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="quick-stats">
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="totalUsersStat">0</div>
+                        <div class="quick-stat-label">Total Users</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="activeUsersStat">0</div>
+                        <div class="quick-stat-label">Active Users</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="pendingDepositsStat">0</div>
+                        <div class="quick-stat-label">Pending Deposits</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="pendingWithdrawalsStat">0</div>
+                        <div class="quick-stat-label">Pending Withdrawals</div>
+                    </div>
+                </div>
+
+                <!-- Main Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-value" id="totalDeposits">0 USDT</div>
+                        <div class="stat-title">Total Deposits</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="stat-value" id="totalWithdrawals">0 USDT</div>
+                        <div class="stat-title">Total Withdrawals</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-hand-holding-usd"></i>
+                        </div>
+                        <div class="stat-value" id="totalInvestments">0 USDT</div>
+                        <div class="stat-title">Total Investments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-value" id="platformProfit">0 USDT</div>
+                        <div class="stat-title">Platform Profit</div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="section-header" style="margin-top: 2rem;">
+                    <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                </div>
+                
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Activity</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentActivity">
+                            <tr>
+                                <td colspan="5" class="empty-state">
+                                    <i class="fas fa-history"></i>
+                                    <div>No recent activity</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
             <!-- Deposit Requests Tab -->
             <div id="deposits" class="tab-content">
-                <h2><i class="fas fa-arrow-down"></i> Deposit Requests</h2>
-                
-                <div class="admin-tabs">
-                    <button class="tab-btn active" data-deposit-tab="pending">Pending</button>
-                    <button class="tab-btn" data-deposit-tab="approved">Approved</button>
-                    <button class="tab-btn" data-deposit-tab="rejected">Rejected</button>
+                <div class="section-header">
+                    <h2><i class="fas fa-arrow-down"></i> Deposit Requests</h2>
+                    <div class="search-filter">
+                        <div class="search-box">
+                            <input type="text" class="form-control" id="searchDeposits" placeholder="Search by user name or email...">
+                        </div>
+                        <select class="form-control filter-select" id="filterDepositStatus">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadDepositRequests()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
                 </div>
 
-                <div id="depositsContent">
-                    <table class="data-table">
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="filterDepositsByTab('pending')">Pending</button>
+                    <button class="tab-btn" onclick="filterDepositsByTab('approved')">Approved</button>
+                    <button class="tab-btn" onclick="filterDepositsByTab('rejected')">Rejected</button>
+                    <button class="tab-btn" onclick="filterDepositsByTab('all')">All History</button>
+                </div>
+
+                <div class="admin-table-container">
+                    <table class="admin-table">
                         <thead>
                             <tr>
                                 <th>User</th>
+                                <th>Email</th>
                                 <th>Amount</th>
+                                <th>Method</th>
                                 <th>Date</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="depositsTable">
-                            <tr><td colspan="5" style="text-align: center; padding: 2rem;">Loading deposit requests...</td></tr>
+                            <tr>
+                                <td colspan="7" class="loading-state">
+                                    <div class="loading-spinner"></div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -593,16 +1162,33 @@
 
             <!-- Withdrawal Requests Tab -->
             <div id="withdrawals" class="tab-content">
-                <h2><i class="fas fa-arrow-up"></i> Withdrawal Requests</h2>
-                
-                <div class="admin-tabs">
-                    <button class="tab-btn active" data-withdrawal-tab="pending">Pending</button>
-                    <button class="tab-btn" data-withdrawal-tab="approved">Approved</button>
-                    <button class="tab-btn" data-withdrawal-tab="rejected">Rejected</button>
+                <div class="section-header">
+                    <h2><i class="fas fa-arrow-up"></i> Withdrawal Requests</h2>
+                    <div class="search-filter">
+                        <div class="search-box">
+                            <input type="text" class="form-control" id="searchWithdrawals" placeholder="Search by user name or email...">
+                        </div>
+                        <select class="form-control filter-select" id="filterWithdrawalStatus">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadWithdrawalRequests()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
                 </div>
 
-                <div id="withdrawalsContent">
-                    <table class="data-table">
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="filterWithdrawalsByTab('pending')">Pending</button>
+                    <button class="tab-btn" onclick="filterWithdrawalsByTab('approved')">Approved</button>
+                    <button class="tab-btn" onclick="filterWithdrawalsByTab('rejected')">Rejected</button>
+                    <button class="tab-btn" onclick="filterWithdrawalsByTab('all')">All History</button>
+                </div>
+
+                <div class="admin-table-container">
+                    <table class="admin-table">
                         <thead>
                             <tr>
                                 <th>User</th>
@@ -616,92 +1202,78 @@
                             </tr>
                         </thead>
                         <tbody id="withdrawalsTable">
-                            <tr><td colspan="8" style="text-align: center; padding: 2rem;">Loading withdrawal requests...</td></tr>
+                            <tr>
+                                <td colspan="8" class="loading-state">
+                                    <div class="loading-spinner"></div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- System Settings Tab -->
-            <div id="settings" class="tab-content">
-                <h2><i class="fas fa-cog"></i> System Settings</h2>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                    <div>
-                        <h3><i class="fas fa-wallet"></i> Deposit Settings</h3>
-                        <div class="form-group">
-                            <label>Minimum Deposit (USDT)</label>
-                            <input type="number" class="form-control" id="minDeposit" min="1" value="1">
-                        </div>
-                        <div class="form-group">
-                            <label>Maximum Deposit (USDT)</label>
-                            <input type="number" class="form-control" id="maxDeposit" min="1" value="5000">
-                        </div>
-                        <div class="form-group">
-                            <label>USDT BEP20 Deposit Address</label>
-                            <input type="text" class="form-control" id="depositAddress" placeholder="0x...">
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <h3><i class="fas fa-money-bill-wave"></i> Withdrawal Settings</h3>
-                        <div class="form-group">
-                            <label>Minimum Withdrawal (USDT)</label>
-                            <input type="number" class="form-control" id="minWithdrawal" min="1" value="1">
-                        </div>
-                        <div class="form-group">
-                            <label>Withdrawal Fee (%)</label>
-                            <input type="number" class="form-control" id="withdrawalFee" min="0" max="100" value="12">
-                        </div>
-                        <div class="form-group">
-                            <label>Daily Bonus (USDT)</label>
-                            <input type="number" class="form-control" id="dailyBonus" min="0" step="0.01" value="0.01">
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 2rem;">
-                    <button class="btn btn-success" onclick="saveSystemSettings()">
-                        <i class="fas fa-save"></i> Save All Settings
+            <!-- User Management Tab -->
+            <div id="users" class="tab-content">
+                <div class="section-header">
+                    <h2><i class="fas fa-users"></i> User Management</h2>
+                    <button class="btn btn-primary" onclick="exportUsers()">
+                        <i class="fas fa-download"></i> Export Users
                     </button>
                 </div>
-            </div>
 
-            <!-- All Users Tab -->
-            <div id="users" class="tab-content">
-                <h2><i class="fas fa-users"></i> All Users</h2>
-                
-                <div style="margin-bottom: 1rem; display: flex; gap: 1rem;">
-                    <input type="text" class="form-control" id="searchUsers" placeholder="Search users by name, email, or referral code..." style="flex: 1;">
-                    <button class="btn" onclick="searchUsers()">
+                <div class="search-filter">
+                    <div class="search-box">
+                        <input type="text" class="form-control" id="searchUsers" placeholder="Search users by name, email, or referral code...">
+                    </div>
+                    <select class="form-control filter-select" id="filterUserStatus">
+                        <option value="">All Users</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="loadAllUsers()">
                         <i class="fas fa-search"></i> Search
                     </button>
                 </div>
 
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Referral Code</th>
-                            <th>Balance</th>
-                            <th>Referrals</th>
-                            <th>Join Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTable">
-                        <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading users...</td></tr>
-                    </tbody>
-                </table>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Balance</th>
+                                <th>Referrals</th>
+                                <th>Join Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTable">
+                            <tr>
+                                <td colspan="8" class="loading-state">
+                                    <div class="loading-spinner"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- All Transactions Tab -->
             <div id="transactions" class="tab-content">
-                <h2><i class="fas fa-exchange-alt"></i> All Transactions</h2>
-                
-                <div style="margin-bottom: 1rem; display: flex; gap: 1rem;">
-                    <select class="form-control" id="filterType" style="flex: 1;">
+                <div class="section-header">
+                    <h2><i class="fas fa-exchange-alt"></i> All Transactions</h2>
+                    <button class="btn btn-primary" onclick="exportTransactions()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+
+                <div class="search-filter">
+                    <div class="search-box">
+                        <input type="text" class="form-control" id="searchTransactions" placeholder="Search transactions...">
+                    </div>
+                    <select class="form-control filter-select" id="filterTransactionType">
                         <option value="">All Types</option>
                         <option value="deposit">Deposit</option>
                         <option value="withdrawal">Withdrawal</option>
@@ -709,72 +1281,254 @@
                         <option value="commission">Commission</option>
                         <option value="bonus">Bonus</option>
                     </select>
-                    <input type="date" class="form-control" id="filterDate">
-                    <button class="btn" onclick="filterTransactions()">
-                        <i class="fas fa-filter"></i> Filter
+                    <select class="form-control filter-select" id="filterTransactionStatus">
+                        <option value="">All Status</option>
+                        <option value="completed">Completed</option>
+                        <option value="pending">Pending</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="loadAllTransactions()">
+                        <i class="fas fa-search"></i> Search
                     </button>
                 </div>
 
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Type</th>
-                            <th>Amount</th>
-                            <th>Description</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactionsTable">
-                        <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading transactions...</td></tr>
-                    </tbody>
-                </table>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Description</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTable">
+                            <tr>
+                                <td colspan="6" class="loading-state">
+                                    <div class="loading-spinner"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Investment Plans Tab -->
+            <div id="plans" class="tab-content">
+                <div class="section-header">
+                    <h2><i class="fas fa-chart-line"></i> Investment Plans Management</h2>
+                    <button class="btn btn-primary" onclick="openPlanModal()">
+                        <i class="fas fa-plus"></i> Add New Plan
+                    </button>
+                </div>
+
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Plan Name</th>
+                                <th>Min - Max ($)</th>
+                                <th>Daily %</th>
+                                <th>Days</th>
+                                <th>Total Return</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="plansTable">
+                            <tr>
+                                <td colspan="7" class="loading-state">
+                                    <div class="loading-spinner"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Leadership Rewards Tab -->
+            <div id="rewards" class="tab-content">
+                <div class="section-header">
+                    <h2><i class="fas fa-trophy"></i> Leadership Rewards Management</h2>
+                    <button class="btn btn-primary" onclick="openRewardModal()">
+                        <i class="fas fa-plus"></i> Add New Reward
+                    </button>
+                </div>
+
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Reward Name</th>
+                                <th>Self Business ($)</th>
+                                <th>Team Business ($)</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rewardsTable">
+                            <tr>
+                                <td colspan="6" class="loading-state">
+                                    <div class="loading-spinner"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Commission Levels Tab -->
+            <div id="commission" class="tab-content">
+                <div class="section-header">
+                    <h2><i class="fas fa-layer-group"></i> Commission Levels Configuration</h2>
+                    <button class="btn btn-primary" onclick="saveCommissionLevels()">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+
+                <div class="stats-grid" id="commissionLevelsGrid">
+                    <!-- Commission levels will be loaded here -->
+                    <div class="loading-state" style="grid-column: 1 / -1;">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Settings Tab -->
+            <div id="settings" class="tab-content">
+                <div class="section-header">
+                    <h2><i class="fas fa-cog"></i> System Settings</h2>
+                    <button class="btn btn-primary" onclick="saveSystemSettings()">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                    <div>
+                        <h3><i class="fas fa-wallet"></i> Deposit Settings</h3>
+                        <div class="form-group">
+                            <label class="form-label">Minimum Deposit (USDT)</label>
+                            <input type="number" class="form-control" id="minDeposit" min="1" value="5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Maximum Deposit (USDT)</label>
+                            <input type="number" class="form-control" id="maxDeposit" min="1" value="5000">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">USDT BEP20 Deposit Address</label>
+                            <input type="text" class="form-control" id="depositAddress" placeholder="0x...">
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3><i class="fas fa-money-bill-wave"></i> Withdrawal Settings</h3>
+                        <div class="form-group">
+                            <label class="form-label">Minimum Withdrawal (USDT)</label>
+                            <input type="number" class="form-control" id="minWithdrawal" min="1" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Withdrawal Fee (%)</label>
+                            <input type="number" class="form-control" id="withdrawalFee" min="0" max="100" step="0.1" value="12">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Daily Bonus (USDT)</label>
+                            <input type="number" class="form-control" id="dailyBonus" min="0" step="0.01" value="0.01">
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3><i class="fas fa-bell"></i> Notification Settings</h3>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="emailNotifications" checked>
+                                Enable Email Notifications
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="smsNotifications">
+                                Enable SMS Notifications
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Admin Notification Email</label>
+                            <input type="email" class="form-control" id="adminEmailSettings" placeholder="admin@cryptowealth.pro">
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3><i class="fas fa-shield-alt"></i> Security Settings</h3>
+                        <div class="form-group">
+                            <label class="form-label">Two-Factor Authentication</label>
+                            <select class="form-control" id="twoFactorAuth">
+                                <option value="enabled">Enabled</option>
+                                <option value="disabled">Disabled</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Session Timeout (Minutes)</label>
+                            <input type="number" class="form-control" id="sessionTimeout" min="5" value="30">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">IP Whitelist (Optional)</label>
+                            <textarea class="form-control" id="ipWhitelist" placeholder="Enter IP addresses separated by commas" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
+    <!-- Modals -->
     <!-- Plan Modal -->
     <div class="modal" id="planModal">
         <div class="modal-content">
-            <h2><i class="fas fa-plus"></i> Add/Edit Investment Plan</h2>
+            <div class="modal-header">
+                <h3 style="margin: 0;"><i class="fas fa-chart-line"></i> <span id="planModalTitle">Add New Plan</span></h3>
+                <button class="close-modal" onclick="closeModal('planModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
             
             <div class="form-group">
-                <label>Plan Name</label>
+                <label class="form-label">Plan Name</label>
                 <input type="text" class="form-control" id="planName" placeholder="Starter Plan">
             </div>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
-                    <label>Minimum Amount ($)</label>
+                    <label class="form-label">Minimum Amount ($)</label>
                     <input type="number" class="form-control" id="planMin" min="1" value="5">
                 </div>
                 <div class="form-group">
-                    <label>Maximum Amount ($)</label>
+                    <label class="form-label">Maximum Amount ($)</label>
                     <input type="number" class="form-control" id="planMax" min="1" value="100">
                 </div>
             </div>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
-                    <label>Daily Return (%)</label>
+                    <label class="form-label">Daily Return (%)</label>
                     <input type="number" class="form-control" id="planDailyReturn" min="0.1" max="100" step="0.1" value="6">
                 </div>
                 <div class="form-group">
-                    <label>Duration (Days)</label>
+                    <label class="form-label">Duration (Days)</label>
                     <input type="number" class="form-control" id="planDays" min="1" value="60">
                 </div>
             </div>
             
             <div class="form-group">
-                <label>
+                <label class="form-label">
                     <input type="checkbox" id="planPrincipalIncluded" checked>
                     Principal Included in Returns
                 </label>
             </div>
             
             <div class="form-group">
-                <label>Status</label>
+                <label class="form-label">Status</label>
                 <select class="form-control" id="planStatus">
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -783,10 +1537,10 @@
             
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
                 <button class="btn" style="flex: 1;" onclick="closeModal('planModal')">
-                    Cancel
+                    <i class="fas fa-times"></i> Cancel
                 </button>
                 <button class="btn btn-success" style="flex: 2;" id="savePlanBtn" onclick="savePlan()">
-                    Save Plan
+                    <i class="fas fa-save"></i> Save Plan
                 </button>
             </div>
         </div>
@@ -795,26 +1549,31 @@
     <!-- Reward Modal -->
     <div class="modal" id="rewardModal">
         <div class="modal-content">
-            <h2><i class="fas fa-gift"></i> Add/Edit Leadership Reward</h2>
+            <div class="modal-header">
+                <h3 style="margin: 0;"><i class="fas fa-gift"></i> <span id="rewardModalTitle">Add New Reward</span></h3>
+                <button class="close-modal" onclick="closeModal('rewardModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
             
             <div class="form-group">
-                <label>Reward Name</label>
+                <label class="form-label">Reward Name</label>
                 <input type="text" class="form-control" id="rewardName" placeholder="iPhone 15 Pro Max">
             </div>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
-                    <label>Self Business Required ($)</label>
+                    <label class="form-label">Self Business Required ($)</label>
                     <input type="number" class="form-control" id="rewardSelfBusiness" min="1" value="1000">
                 </div>
                 <div class="form-group">
-                    <label>Team Business Required ($)</label>
+                    <label class="form-label">Team Business Required ($)</label>
                     <input type="number" class="form-control" id="rewardTeamBusiness" min="1" value="3500">
                 </div>
             </div>
             
             <div class="form-group">
-                <label>Reward Type</label>
+                <label class="form-label">Reward Type</label>
                 <select class="form-control" id="rewardType">
                     <option value="gadget">Electronic Gadget</option>
                     <option value="travel">Travel Package</option>
@@ -825,7 +1584,7 @@
             </div>
             
             <div class="form-group">
-                <label>Status</label>
+                <label class="form-label">Status</label>
                 <select class="form-control" id="rewardStatus">
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -834,17 +1593,38 @@
             
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
                 <button class="btn" style="flex: 1;" onclick="closeModal('rewardModal')">
-                    Cancel
+                    <i class="fas fa-times"></i> Cancel
                 </button>
                 <button class="btn btn-success" style="flex: 2;" id="saveRewardBtn" onclick="saveReward()">
-                    Save Reward
+                    <i class="fas fa-save"></i> Save Reward
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- User Details Modal -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="margin: 0;"><i class="fas fa-user"></i> User Details</h3>
+                <button class="close-modal" onclick="closeModal('userModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="userDetailsContent">
+                <!-- User details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
+
     <script>
-        // Firebase Configuration
+        // ====================
+        // FIREBASE CONFIGURATION
+        // ====================
         const firebaseConfig = {
             apiKey: "AIzaSyB6vD81slzYeX4RrV-9Xn4agsEyo9eNWNE",
             authDomain: "fir-85dcd.firebaseapp.com",
@@ -860,82 +1640,134 @@
         const auth = firebase.auth();
         const database = firebase.database();
 
-        // Admin State
+        // ====================
+        // APPLICATION STATE
+        // ====================
+        let currentAdmin = null;
+        let adminLoggedIn = false;
         let currentPlanId = null;
         let currentRewardId = null;
+        let currentTab = 'dashboard';
+        let sidebarOpen = true;
 
-        // Admin Credentials (In production, use Firebase Auth with admin accounts)
+        // Admin credentials (In production, use Firebase Auth with admin users)
         const ADMIN_EMAIL = "admin@cryptowealth.pro";
         const ADMIN_PASSWORD = "Admin@123";
 
+        // ====================
+        // INITIALIZATION
+        // ====================
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if admin is already logged in
-            const adminLoggedIn = localStorage.getItem('adminLoggedIn');
-            if (adminLoggedIn === 'true') {
-                showAdminPanel();
-                loadDashboard();
-            }
-            
+            // Hide loading screen after 2 seconds
+            setTimeout(() => {
+                document.getElementById('adminLoading').style.display = 'none';
+                
+                // Check if admin is already logged in
+                const savedLogin = localStorage.getItem('adminLoggedIn');
+                if (savedLogin === 'true') {
+                    showAdminPanel();
+                    loadDashboard();
+                } else {
+                    showLoginScreen();
+                }
+            }, 2000);
+
+            // Setup event listeners
             setupEventListeners();
+            
+            // Handle window resize
+            handleResize();
+            window.addEventListener('resize', handleResize);
         });
 
         function setupEventListeners() {
-            // Tab switching
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tabName = this.getAttribute('data-deposit-tab') || 
-                                   this.getAttribute('data-withdrawal-tab');
-                    
-                    // Update active tab
-                    this.parentElement.querySelectorAll('.tab-btn').forEach(b => {
-                        b.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                    
-                    // Load tab content
-                    if (tabName) {
-                        if (this.hasAttribute('data-deposit-tab')) {
-                            loadDepositRequests(tabName);
-                        } else {
-                            loadWithdrawalRequests(tabName);
-                        }
+            // Login form enter key
+            document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    adminLogin();
+                }
+            });
+            
+            // Search inputs enter key
+            document.getElementById('searchDeposits')?.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') loadDepositRequests();
+            });
+            
+            document.getElementById('searchWithdrawals')?.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') loadWithdrawalRequests();
+            });
+            
+            document.getElementById('searchUsers')?.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') loadAllUsers();
+            });
+            
+            document.getElementById('searchTransactions')?.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') loadAllTransactions();
+            });
+            
+            // Close modals on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeAllModals();
+                }
+            });
+            
+            // Close modals when clicking outside
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('active');
                     }
                 });
             });
         }
 
-        function adminLogin() {
-            const email = document.getElementById('adminEmail').value;
-            const password = document.getElementById('adminPassword').value;
-            
-            if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-                // Successful login
-                localStorage.setItem('adminLoggedIn', 'true');
-                showAdminPanel();
-                loadDashboard();
-                showNotification('Admin login successful!', 'success');
+        function handleResize() {
+            if (window.innerWidth <= 992) {
+                sidebarOpen = false;
+                document.getElementById('adminSidebar').classList.remove('active');
+                document.getElementById('adminMain').style.marginLeft = '0';
             } else {
-                showNotification('Invalid admin credentials!', 'error');
+                sidebarOpen = true;
+                document.getElementById('adminSidebar').classList.add('active');
+                document.getElementById('adminMain').style.marginLeft = '250px';
             }
         }
 
-        function adminLogout() {
-            if (confirm('Are you sure you want to logout?')) {
-                localStorage.removeItem('adminLoggedIn');
-                document.getElementById('adminPanel').style.display = 'none';
-                document.getElementById('adminLogin').style.display = 'flex';
-                showNotification('Logged out successfully', 'success');
-            }
+        // ====================
+        // UI NAVIGATION
+        // ====================
+        function showLoginScreen() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('adminPanel').style.display = 'none';
         }
 
         function showAdminPanel() {
-            document.getElementById('adminLogin').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('adminPanel').style.display = 'block';
+            // Load initial data
+            loadDashboard();
+        }
+
+        function toggleSidebar() {
+            sidebarOpen = !sidebarOpen;
+            const sidebar = document.getElementById('adminSidebar');
+            const main = document.getElementById('adminMain');
+            
+            if (sidebarOpen) {
+                sidebar.classList.add('active');
+                main.style.marginLeft = '250px';
+            } else {
+                sidebar.classList.remove('active');
+                main.style.marginLeft = '0';
+            }
         }
 
         function showTab(tabId) {
-            // Update active menu item
-            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+            currentTab = tabId;
+            
+            // Update active sidebar link
+            document.querySelectorAll('.sidebar-link').forEach(link => {
                 link.classList.remove('active');
                 if (link.getAttribute('onclick') === `showTab('${tabId}')`) {
                     link.classList.add('active');
@@ -955,23 +1787,11 @@
                 case 'dashboard':
                     loadDashboard();
                     break;
-                case 'plans':
-                    loadPlans();
-                    break;
-                case 'rewards':
-                    loadRewards();
-                    break;
-                case 'commission':
-                    loadCommissionLevels();
-                    break;
                 case 'deposits':
-                    loadDepositRequests('pending');
+                    loadDepositRequests();
                     break;
                 case 'withdrawals':
-                    loadWithdrawalRequests('pending');
-                    break;
-                case 'settings':
-                    loadSystemSettings();
+                    loadWithdrawalRequests();
                     break;
                 case 'users':
                     loadAllUsers();
@@ -979,6 +1799,80 @@
                 case 'transactions':
                     loadAllTransactions();
                     break;
+                case 'plans':
+                    loadInvestmentPlans();
+                    break;
+                case 'rewards':
+                    loadLeadershipRewards();
+                    break;
+                case 'commission':
+                    loadCommissionLevels();
+                    break;
+                case 'settings':
+                    loadSystemSettings();
+                    break;
+            }
+            
+            // Close sidebar on mobile
+            if (window.innerWidth <= 992) {
+                sidebarOpen = false;
+                document.getElementById('adminSidebar').classList.remove('active');
+                document.getElementById('adminMain').style.marginLeft = '0';
+            }
+        }
+
+        function filterDepositsByTab(status) {
+            document.querySelectorAll('#deposits .tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            loadDepositRequests(status);
+        }
+
+        function filterWithdrawalsByTab(status) {
+            document.querySelectorAll('#withdrawals .tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            loadWithdrawalRequests(status);
+        }
+
+        // ====================
+        // AUTHENTICATION
+        // ====================
+        function adminLogin() {
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            if (!email || !password) {
+                showNotification('Please enter email and password', 'error');
+                return;
+            }
+            
+            // For demo purposes, using simple check
+            // In production, use Firebase Auth with admin users
+            if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+                // Successful login
+                adminLoggedIn = true;
+                localStorage.setItem('adminLoggedIn', 'true');
+                showAdminPanel();
+                showNotification('Admin login successful!', 'success');
+                
+                // Update admin name
+                document.getElementById('adminName').textContent = 'Administrator';
+            } else {
+                showNotification('Invalid admin credentials!', 'error');
+            }
+        }
+
+        function adminLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                adminLoggedIn = false;
+                localStorage.removeItem('adminLoggedIn');
+                showLoginScreen();
+                showNotification('Logged out successfully', 'success');
             }
         }
 
@@ -986,74 +1880,146 @@
         // DASHBOARD FUNCTIONS
         // ====================
         function loadDashboard() {
-            // Load total users
-            database.ref('users').once('value').then(snapshot => {
-                const users = snapshot.val() || {};
-                document.getElementById('totalUsers').textContent = Object.keys(users).length;
-            });
+            // Show loading state
+            document.getElementById('recentActivity').innerHTML = `
+                <tr>
+                    <td colspan="5" class="loading-state">
+                        <div class="loading-spinner"></div>
+                    </td>
+                </tr>
+            `;
             
-            // Load total deposits
-            database.ref('depositRequests').once('value').then(snapshot => {
+            // Load all data in parallel
+            Promise.all([
+                loadTotalUsers(),
+                loadTotalDeposits(),
+                loadTotalWithdrawals(),
+                loadTotalInvestments(),
+                loadPlatformProfit(),
+                loadActiveUsers(),
+                loadPendingDeposits(),
+                loadPendingWithdrawals(),
+                loadRecentActivity()
+            ]).then(() => {
+                console.log('Dashboard loaded successfully');
+            }).catch(error => {
+                showNotification('Error loading dashboard: ' + error.message, 'error');
+            });
+        }
+
+        function loadTotalUsers() {
+            return database.ref('users').once('value').then(snapshot => {
+                const users = snapshot.val() || {};
+                const count = Object.keys(users).length;
+                document.getElementById('totalUsersStat').textContent = count;
+                return count;
+            });
+        }
+
+        function loadActiveUsers() {
+            return database.ref('users').once('value').then(snapshot => {
+                const users = snapshot.val() || {};
+                let activeCount = 0;
+                Object.values(users).forEach(user => {
+                    if (user.lastLogin && Date.now() - new Date(user.lastLogin).getTime() < 7 * 24 * 60 * 60 * 1000) {
+                        activeCount++;
+                    }
+                });
+                document.getElementById('activeUsersStat').textContent = activeCount;
+                return activeCount;
+            });
+        }
+
+        function loadTotalDeposits() {
+            return database.ref('depositRequests').once('value').then(snapshot => {
                 const deposits = snapshot.val() || {};
                 let total = 0;
                 Object.values(deposits).forEach(deposit => {
-                    if (deposit.status === 'completed') {
-                        total += deposit.amount;
+                    if (deposit.status === 'approved' || deposit.status === 'completed') {
+                        total += parseFloat(deposit.amount) || 0;
                     }
                 });
                 document.getElementById('totalDeposits').textContent = total.toFixed(2) + ' USDT';
+                return total;
             });
-            
-            // Load total withdrawals
-            database.ref('withdrawalRequests').once('value').then(snapshot => {
+        }
+
+        function loadTotalWithdrawals() {
+            return database.ref('withdrawalRequests').once('value').then(snapshot => {
                 const withdrawals = snapshot.val() || {};
                 let total = 0;
                 Object.values(withdrawals).forEach(withdrawal => {
-                    if (withdrawal.status === 'completed') {
-                        total += withdrawal.amount;
+                    if (withdrawal.status === 'approved' || withdrawal.status === 'completed') {
+                        total += parseFloat(withdrawal.amount) || 0;
                     }
                 });
                 document.getElementById('totalWithdrawals').textContent = total.toFixed(2) + ' USDT';
+                return total;
             });
-            
-            // Load pending requests
-            database.ref('depositRequests').once('value').then(depositSnapshot => {
-                const deposits = depositSnapshot.val() || {};
-                database.ref('withdrawalRequests').once('value').then(withdrawalSnapshot => {
-                    const withdrawals = withdrawalSnapshot.val() || {};
-                    let pending = 0;
-                    
-                    Object.values(deposits).forEach(deposit => {
-                        if (deposit.status === 'pending') pending++;
-                    });
-                    
-                    Object.values(withdrawals).forEach(withdrawal => {
-                        if (withdrawal.status === 'pending') pending++;
-                    });
-                    
-                    document.getElementById('pendingRequests').textContent = pending;
+        }
+
+        function loadTotalInvestments() {
+            return database.ref('users').once('value').then(snapshot => {
+                const users = snapshot.val() || {};
+                let total = 0;
+                Object.values(users).forEach(user => {
+                    total += parseFloat(user.totalInvested) || 0;
                 });
+                document.getElementById('totalInvestments').textContent = total.toFixed(2) + ' USDT';
+                return total;
             });
-            
-            // Load recent activity
-            loadRecentActivity();
+        }
+
+        function loadPlatformProfit() {
+            return database.ref('withdrawalRequests').once('value').then(withdrawalSnapshot => {
+                const withdrawals = withdrawalSnapshot.val() || {};
+                let totalFees = 0;
+                Object.values(withdrawals).forEach(withdrawal => {
+                    if (withdrawal.status === 'approved' || withdrawal.status === 'completed') {
+                        totalFees += parseFloat(withdrawal.fee) || 0;
+                    }
+                });
+                document.getElementById('platformProfit').textContent = totalFees.toFixed(2) + ' USDT';
+                return totalFees;
+            });
+        }
+
+        function loadPendingDeposits() {
+            return database.ref('depositRequests').once('value').then(snapshot => {
+                const deposits = snapshot.val() || {};
+                let pendingCount = 0;
+                Object.values(deposits).forEach(deposit => {
+                    if (deposit.status === 'pending') pendingCount++;
+                });
+                document.getElementById('pendingDepositsStat').textContent = pendingCount;
+                return pendingCount;
+            });
+        }
+
+        function loadPendingWithdrawals() {
+            return database.ref('withdrawalRequests').once('value').then(snapshot => {
+                const withdrawals = snapshot.val() || {};
+                let pendingCount = 0;
+                Object.values(withdrawals).forEach(withdrawal => {
+                    if (withdrawal.status === 'pending') pendingCount++;
+                });
+                document.getElementById('pendingWithdrawalsStat').textContent = pendingCount;
+                return pendingCount;
+            });
         }
 
         function loadRecentActivity() {
-            const activityDiv = document.getElementById('recentActivity');
-            activityDiv.innerHTML = '<div class="loader-small"></div>';
-            
-            // Get recent transactions from all users
-            database.ref('users').once('value').then(snapshot => {
+            // Get transactions from all users
+            return database.ref('users').once('value').then(snapshot => {
                 const users = snapshot.val() || {};
                 let allTransactions = [];
                 
                 Object.entries(users).forEach(([userId, user]) => {
                     const transactions = user.transactions || [];
-                    transactions.forEach(t => {
+                    transactions.forEach(transaction => {
                         allTransactions.push({
-                            ...t,
-                            userName: user.name,
+                            ...transaction,
+                            userName: user.name || 'Unknown User',
                             userId: userId
                         });
                     });
@@ -1062,51 +2028,768 @@
                 // Sort by date (newest first)
                 allTransactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                 
-                // Show last 10
-                const recent = allTransactions.slice(0, 10);
+                // Get first 10
+                const recentTransactions = allTransactions.slice(0, 10);
                 
-                if (recent.length === 0) {
-                    activityDiv.innerHTML = '<p>No recent activity</p>';
+                const tableBody = document.getElementById('recentActivity');
+                
+                if (recentTransactions.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                <i class="fas fa-history"></i>
+                                <div>No recent activity</div>
+                            </td>
+                        </tr>
+                    `;
                     return;
                 }
                 
                 let html = '';
-                recent.forEach(transaction => {
+                recentTransactions.forEach(transaction => {
                     const date = new Date(transaction.timestamp).toLocaleString();
+                    const amount = parseFloat(transaction.amount).toFixed(2);
+                    let statusBadge = '';
+                    
+                    switch(transaction.status) {
+                        case 'completed':
+                            statusBadge = '<span class="badge badge-success">Completed</span>';
+                            break;
+                        case 'pending':
+                            statusBadge = '<span class="badge badge-warning">Pending</span>';
+                            break;
+                        case 'rejected':
+                            statusBadge = '<span class="badge badge-danger">Rejected</span>';
+                            break;
+                        default:
+                            statusBadge = '<span class="badge badge-primary">' + transaction.status + '</span>';
+                    }
+                    
                     html += `
-                        <div style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                            <div style="display: flex; justify-content: space-between;">
-                                <strong>${transaction.userName}</strong>
-                                <span>${transaction.amount} USDT</span>
-                            </div>
-                            <div style="font-size: 0.9rem; color: #a0a0c0;">
-                                ${transaction.type} - ${transaction.description}
-                            </div>
-                            <div style="font-size: 0.8rem;">${date}</div>
-                        </div>
+                        <tr>
+                            <td>${transaction.userName}</td>
+                            <td>${transaction.type} - ${transaction.description || ''}</td>
+                            <td>${amount} USDT</td>
+                            <td>${date}</td>
+                            <td>${statusBadge}</td>
+                        </tr>
                     `;
                 });
                 
-                activityDiv.innerHTML = html;
+                tableBody.innerHTML = html;
             });
+        }
+
+        function filterDashboard() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            // In a real implementation, you would filter the data by date range
+            showNotification('Date filter applied', 'success');
+            loadDashboard(); // Reload with filtered data
+        }
+
+        // ====================
+        // DEPOSIT REQUESTS MANAGEMENT
+        // ====================
+        function loadDepositRequests(status = 'pending') {
+            const searchTerm = document.getElementById('searchDeposits')?.value.toLowerCase() || '';
+            const statusFilter = status === 'all' ? '' : status;
+            
+            database.ref('depositRequests').once('value').then(snapshot => {
+                const deposits = snapshot.val() || {};
+                const tableBody = document.getElementById('depositsTable');
+                
+                // Get user data for names
+                database.ref('users').once('value').then(userSnapshot => {
+                    const users = userSnapshot.val() || {};
+                    
+                    let depositList = Object.entries(deposits).map(([id, deposit]) => {
+                        const user = users[deposit.userId] || {};
+                        return {
+                            id: id,
+                            ...deposit,
+                            userName: user.name || 'Unknown User',
+                            userEmail: user.email || 'No Email'
+                        };
+                    });
+                    
+                    // Apply filters
+                    if (statusFilter) {
+                        depositList = depositList.filter(deposit => deposit.status === statusFilter);
+                    }
+                    
+                    if (searchTerm) {
+                        depositList = depositList.filter(deposit => 
+                            deposit.userName.toLowerCase().includes(searchTerm) ||
+                            deposit.userEmail.toLowerCase().includes(searchTerm)
+                        );
+                    }
+                    
+                    // Sort by date (newest first)
+                    depositList.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    
+                    if (depositList.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="7" class="empty-state">
+                                    <i class="fas fa-database"></i>
+                                    <div>No deposit requests found</div>
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    let html = '';
+                    depositList.forEach(deposit => {
+                        const date = new Date(deposit.timestamp).toLocaleString();
+                        const amount = parseFloat(deposit.amount).toFixed(2);
+                        let statusBadge = '';
+                        let actions = '';
+                        
+                        switch(deposit.status) {
+                            case 'pending':
+                                statusBadge = '<span class="badge badge-warning">Pending</span>';
+                                actions = `
+                                    <div class="action-buttons">
+                                        <button class="btn btn-success btn-sm" onclick="approveDeposit('${deposit.id}')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="rejectDeposit('${deposit.id}')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                `;
+                                break;
+                            case 'approved':
+                            case 'completed':
+                                statusBadge = '<span class="badge badge-success">Approved</span>';
+                                actions = '<span class="text-success">Approved</span>';
+                                break;
+                            case 'rejected':
+                                statusBadge = '<span class="badge badge-danger">Rejected</span>';
+                                actions = '<span class="text-danger">Rejected</span>';
+                                break;
+                        }
+                        
+                        html += `
+                            <tr>
+                                <td><strong>${deposit.userName}</strong></td>
+                                <td>${deposit.userEmail}</td>
+                                <td>${amount} USDT</td>
+                                <td>USDT BEP20</td>
+                                <td>${date}</td>
+                                <td>${statusBadge}</td>
+                                <td>${actions}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableBody.innerHTML = html;
+                });
+            });
+        }
+
+        function approveDeposit(depositId) {
+            if (confirm('Are you sure you want to approve this deposit?')) {
+                database.ref(`depositRequests/${depositId}`).once('value').then(snapshot => {
+                    const deposit = snapshot.val();
+                    
+                    // Update deposit status
+                    database.ref(`depositRequests/${depositId}`).update({
+                        status: 'completed',
+                        approvedAt: new Date().toISOString(),
+                        approvedBy: 'Admin'
+                    });
+                    
+                    // Update user balance
+                    database.ref(`users/${deposit.userId}`).once('value').then(userSnapshot => {
+                        const user = userSnapshot.val();
+                        const newBalance = (parseFloat(user.balance) || 0) + parseFloat(deposit.amount);
+                        
+                        database.ref(`users/${deposit.userId}`).update({
+                            balance: newBalance
+                        });
+                        
+                        // Add transaction to user
+                        const userTransactions = user.transactions || [];
+                        userTransactions.push({
+                            type: 'deposit',
+                            amount: parseFloat(deposit.amount),
+                            description: 'Deposit Approved by Admin',
+                            status: 'completed',
+                            timestamp: new Date().toISOString()
+                        });
+                        
+                        database.ref(`users/${deposit.userId}/transactions`).set(userTransactions);
+                        
+                        showNotification('Deposit approved successfully!', 'success');
+                        loadDepositRequests();
+                        loadDashboard();
+                    });
+                });
+            }
+        }
+
+        function rejectDeposit(depositId) {
+            if (confirm('Are you sure you want to reject this deposit?')) {
+                database.ref(`depositRequests/${depositId}`).update({
+                    status: 'rejected',
+                    rejectedAt: new Date().toISOString(),
+                    rejectedBy: 'Admin'
+                }).then(() => {
+                    showNotification('Deposit request rejected!', 'success');
+                    loadDepositRequests();
+                });
+            }
+        }
+
+        // ====================
+        // WITHDRAWAL REQUESTS MANAGEMENT
+        // ====================
+        function loadWithdrawalRequests(status = 'pending') {
+            const searchTerm = document.getElementById('searchWithdrawals')?.value.toLowerCase() || '';
+            const statusFilter = status === 'all' ? '' : status;
+            
+            database.ref('withdrawalRequests').once('value').then(snapshot => {
+                const withdrawals = snapshot.val() || {};
+                const tableBody = document.getElementById('withdrawalsTable');
+                
+                // Get user data for names
+                database.ref('users').once('value').then(userSnapshot => {
+                    const users = userSnapshot.val() || {};
+                    
+                    let withdrawalList = Object.entries(withdrawals).map(([id, withdrawal]) => {
+                        const user = users[withdrawal.userId] || {};
+                        return {
+                            id: id,
+                            ...withdrawal,
+                            userName: user.name || 'Unknown User'
+                        };
+                    });
+                    
+                    // Apply filters
+                    if (statusFilter) {
+                        withdrawalList = withdrawalList.filter(withdrawal => withdrawal.status === statusFilter);
+                    }
+                    
+                    if (searchTerm) {
+                        withdrawalList = withdrawalList.filter(withdrawal => 
+                            withdrawal.userName.toLowerCase().includes(searchTerm)
+                        );
+                    }
+                    
+                    // Sort by date (newest first)
+                    withdrawalList.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    
+                    if (withdrawalList.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="8" class="empty-state">
+                                    <i class="fas fa-database"></i>
+                                    <div>No withdrawal requests found</div>
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    let html = '';
+                    withdrawalList.forEach(withdrawal => {
+                        const date = new Date(withdrawal.timestamp).toLocaleString();
+                        const amount = parseFloat(withdrawal.amount).toFixed(2);
+                        const fee = parseFloat(withdrawal.fee).toFixed(2);
+                        const netAmount = parseFloat(withdrawal.netAmount).toFixed(2);
+                        let statusBadge = '';
+                        let actions = '';
+                        
+                        // Format wallet address
+                        const walletAddress = withdrawal.walletAddress || '';
+                        const formattedWallet = walletAddress.length > 20 
+                            ? walletAddress.substring(0, 10) + '...' + walletAddress.substring(walletAddress.length - 10)
+                            : walletAddress;
+                        
+                        switch(withdrawal.status) {
+                            case 'pending':
+                                statusBadge = '<span class="badge badge-warning">Pending</span>';
+                                actions = `
+                                    <div class="action-buttons">
+                                        <button class="btn btn-success btn-sm" onclick="approveWithdrawal('${withdrawal.id}')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="rejectWithdrawal('${withdrawal.id}')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                `;
+                                break;
+                            case 'approved':
+                            case 'completed':
+                                statusBadge = '<span class="badge badge-success">Approved</span>';
+                                actions = '<span class="text-success">Processed</span>';
+                                break;
+                            case 'rejected':
+                                statusBadge = '<span class="badge badge-danger">Rejected</span>';
+                                actions = '<span class="text-danger">Rejected</span>';
+                                break;
+                        }
+                        
+                        html += `
+                            <tr>
+                                <td><strong>${withdrawal.userName}</strong></td>
+                                <td>${amount} USDT</td>
+                                <td>${fee} USDT</td>
+                                <td>${netAmount} USDT</td>
+                                <td title="${walletAddress}">${formattedWallet}</td>
+                                <td>${date}</td>
+                                <td>${statusBadge}</td>
+                                <td>${actions}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableBody.innerHTML = html;
+                });
+            });
+        }
+
+        function approveWithdrawal(withdrawalId) {
+            if (confirm('Are you sure you want to approve this withdrawal?')) {
+                database.ref(`withdrawalRequests/${withdrawalId}`).once('value').then(snapshot => {
+                    const withdrawal = snapshot.val();
+                    
+                    // Update withdrawal status
+                    database.ref(`withdrawalRequests/${withdrawalId}`).update({
+                        status: 'completed',
+                        approvedAt: new Date().toISOString(),
+                        approvedBy: 'Admin'
+                    });
+                    
+                    // Update user's total withdrawn amount
+                    database.ref(`users/${withdrawal.userId}`).once('value').then(userSnapshot => {
+                        const user = userSnapshot.val();
+                        const newTotalWithdrawn = (parseFloat(user.totalWithdrawn) || 0) + parseFloat(withdrawal.amount);
+                        
+                        database.ref(`users/${withdrawal.userId}`).update({
+                            totalWithdrawn: newTotalWithdrawn
+                        });
+                        
+                        // Add transaction to user
+                        const userTransactions = user.transactions || [];
+                        userTransactions.push({
+                            type: 'withdrawal',
+                            amount: parseFloat(withdrawal.amount),
+                            description: 'Withdrawal Processed',
+                            status: 'completed',
+                            fee: parseFloat(withdrawal.fee),
+                            netAmount: parseFloat(withdrawal.netAmount),
+                            timestamp: new Date().toISOString()
+                        });
+                        
+                        database.ref(`users/${withdrawal.userId}/transactions`).set(userTransactions);
+                        
+                        showNotification('Withdrawal approved successfully!', 'success');
+                        loadWithdrawalRequests();
+                        loadDashboard();
+                    });
+                });
+            }
+        }
+
+        function rejectWithdrawal(withdrawalId) {
+            if (confirm('Are you sure you want to reject this withdrawal?')) {
+                database.ref(`withdrawalRequests/${withdrawalId}`).once('value').then(snapshot => {
+                    const withdrawal = snapshot.val();
+                    
+                    // Refund amount to user balance
+                    database.ref(`users/${withdrawal.userId}`).once('value').then(userSnapshot => {
+                        const user = userSnapshot.val();
+                        const newBalance = (parseFloat(user.balance) || 0) + parseFloat(withdrawal.amount);
+                        
+                        database.ref(`users/${withdrawal.userId}`).update({
+                            balance: newBalance
+                        });
+                        
+                        // Update withdrawal status
+                        database.ref(`withdrawalRequests/${withdrawalId}`).update({
+                            status: 'rejected',
+                            rejectedAt: new Date().toISOString(),
+                            rejectedBy: 'Admin'
+                        }).then(() => {
+                            showNotification('Withdrawal rejected and amount refunded!', 'success');
+                            loadWithdrawalRequests();
+                            loadDashboard();
+                        });
+                    });
+                });
+            }
+        }
+
+        // ====================
+        // USER MANAGEMENT
+        // ====================
+        function loadAllUsers() {
+            const searchTerm = document.getElementById('searchUsers')?.value.toLowerCase() || '';
+            const statusFilter = document.getElementById('filterUserStatus')?.value || '';
+            
+            database.ref('users').once('value').then(snapshot => {
+                const users = snapshot.val() || {};
+                const tableBody = document.getElementById('usersTable');
+                
+                let userList = Object.entries(users).map(([id, user]) => ({
+                    id: id,
+                    ...user
+                }));
+                
+                // Apply filters
+                if (searchTerm) {
+                    userList = userList.filter(user => 
+                        (user.name || '').toLowerCase().includes(searchTerm) ||
+                        (user.email || '').toLowerCase().includes(searchTerm) ||
+                        (user.referralCode || '').toLowerCase().includes(searchTerm)
+                    );
+                }
+                
+                if (statusFilter === 'active') {
+                    userList = userList.filter(user => {
+                        const lastLogin = user.lastLogin ? new Date(user.lastLogin) : null;
+                        return lastLogin && Date.now() - lastLogin.getTime() < 30 * 24 * 60 * 60 * 1000;
+                    });
+                } else if (statusFilter === 'inactive') {
+                    userList = userList.filter(user => {
+                        const lastLogin = user.lastLogin ? new Date(user.lastLogin) : null;
+                        return !lastLogin || Date.now() - lastLogin.getTime() >= 30 * 24 * 60 * 60 * 1000;
+                    });
+                }
+                
+                // Sort by join date (newest first)
+                userList.sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
+                
+                if (userList.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="empty-state">
+                                <i class="fas fa-users"></i>
+                                <div>No users found</div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                userList.forEach(user => {
+                    const joinDate = new Date(user.joinDate).toLocaleDateString();
+                    const balance = parseFloat(user.balance || 0).toFixed(2);
+                    const referrals = user.directReferrals || 0;
+                    
+                    html += `
+                        <tr>
+                            <td><strong>${user.name || 'Unknown'}</strong></td>
+                            <td>${user.email || 'No email'}</td>
+                            <td>${user.phone || 'N/A'}</td>
+                            <td>${balance} USDT</td>
+                            <td>${referrals}</td>
+                            <td>${joinDate}</td>
+                            <td>
+                                ${user.lastLogin && Date.now() - new Date(user.lastLogin).getTime() < 7 * 24 * 60 * 60 * 1000 
+                                    ? '<span class="badge badge-success">Active</span>' 
+                                    : '<span class="badge badge-warning">Inactive</span>'}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm" onclick="viewUserDetails('${user.id}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-warning btn-sm" onclick="editUser('${user.id}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tableBody.innerHTML = html;
+            });
+        }
+
+        function viewUserDetails(userId) {
+            database.ref(`users/${userId}`).once('value').then(snapshot => {
+                const user = snapshot.val();
+                if (!user) {
+                    showNotification('User not found', 'error');
+                    return;
+                }
+                
+                const detailsContent = document.getElementById('userDetailsContent');
+                const joinDate = new Date(user.joinDate).toLocaleString();
+                const lastLogin = user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never';
+                
+                detailsContent.innerHTML = `
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="color: var(--admin-accent);">User Information</h4>
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Name:</span>
+                                <strong>${user.name}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Email:</span>
+                                <strong>${user.email}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Phone:</span>
+                                <strong>${user.phone || 'N/A'}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Referral Code:</span>
+                                <code>${user.referralCode}</code>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="color: var(--admin-accent);">Account Status</h4>
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Join Date:</span>
+                                <strong>${joinDate}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Last Login:</span>
+                                <strong>${lastLogin}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Account Status:</span>
+                                <strong>
+                                    ${user.lastLogin && Date.now() - new Date(user.lastLogin).getTime() < 7 * 24 * 60 * 60 * 1000 
+                                        ? '<span class="badge badge-success">Active</span>' 
+                                        : '<span class="badge badge-warning">Inactive</span>'}
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="color: var(--admin-accent);">Financial Information</h4>
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Current Balance:</span>
+                                <strong class="text-success">${parseFloat(user.balance || 0).toFixed(2)} USDT</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Total Earned:</span>
+                                <strong>${parseFloat(user.totalEarnings || 0).toFixed(2)} USDT</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Total Withdrawn:</span>
+                                <strong>${parseFloat(user.totalWithdrawn || 0).toFixed(2)} USDT</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Total Invested:</span>
+                                <strong>${parseFloat(user.totalInvested || 0).toFixed(2)} USDT</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="color: var(--admin-accent);">Network Information</h4>
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Direct Referrals:</span>
+                                <strong>${user.directReferrals || 0}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Total Downline:</span>
+                                <strong>${user.totalDownline || 0}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Self Business:</span>
+                                <strong>${parseFloat(user.selfBusiness || 0).toFixed(2)} USDT</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Team Business:</span>
+                                <strong>${parseFloat(user.teamBusiness || 0).toFixed(2)} USDT</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button class="btn" style="flex: 1;" onclick="closeModal('userModal')">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                        <button class="btn btn-primary" style="flex: 2;" onclick="editUser('${userId}')">
+                            <i class="fas fa-edit"></i> Edit User
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('userModal').classList.add('active');
+            });
+        }
+
+        function editUser(userId) {
+            // For now, just show a notification
+            // In a full implementation, this would open an edit modal
+            showNotification('User edit functionality would open here', 'info');
+            closeModal('userModal');
+        }
+
+        function exportUsers() {
+            // In a real implementation, this would generate a CSV or Excel file
+            showNotification('User export feature would generate a file here', 'info');
+        }
+
+        // ====================
+        // TRANSACTIONS MANAGEMENT
+        // ====================
+        function loadAllTransactions() {
+            const searchTerm = document.getElementById('searchTransactions')?.value.toLowerCase() || '';
+            const typeFilter = document.getElementById('filterTransactionType')?.value || '';
+            const statusFilter = document.getElementById('filterTransactionStatus')?.value || '';
+            
+            // Get all users first to get names
+            database.ref('users').once('value').then(userSnapshot => {
+                const users = userSnapshot.val() || {};
+                
+                // Collect transactions from all users
+                let allTransactions = [];
+                
+                Object.entries(users).forEach(([userId, user]) => {
+                    const transactions = user.transactions || [];
+                    transactions.forEach(transaction => {
+                        allTransactions.push({
+                            ...transaction,
+                            userName: user.name || 'Unknown User',
+                            userId: userId
+                        });
+                    });
+                });
+                
+                // Apply filters
+                if (typeFilter) {
+                    allTransactions = allTransactions.filter(t => t.type === typeFilter);
+                }
+                
+                if (statusFilter) {
+                    allTransactions = allTransactions.filter(t => t.status === statusFilter);
+                }
+                
+                if (searchTerm) {
+                    allTransactions = allTransactions.filter(t => 
+                        t.userName.toLowerCase().includes(searchTerm) ||
+                        t.description?.toLowerCase().includes(searchTerm)
+                    );
+                }
+                
+                // Sort by date (newest first)
+                allTransactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                const tableBody = document.getElementById('transactionsTable');
+                
+                if (allTransactions.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <i class="fas fa-exchange-alt"></i>
+                                <div>No transactions found</div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                allTransactions.slice(0, 100).forEach(transaction => { // Limit to 100 for performance
+                    const date = new Date(transaction.timestamp).toLocaleString();
+                    const amount = parseFloat(transaction.amount).toFixed(2);
+                    let statusBadge = '';
+                    let typeBadge = '';
+                    
+                    switch(transaction.status) {
+                        case 'completed':
+                            statusBadge = '<span class="badge badge-success">Completed</span>';
+                            break;
+                        case 'pending':
+                            statusBadge = '<span class="badge badge-warning">Pending</span>';
+                            break;
+                        case 'rejected':
+                            statusBadge = '<span class="badge badge-danger">Rejected</span>';
+                            break;
+                        default:
+                            statusBadge = '<span class="badge badge-primary">' + transaction.status + '</span>';
+                    }
+                    
+                    switch(transaction.type) {
+                        case 'deposit':
+                            typeBadge = '<span class="badge badge-success">Deposit</span>';
+                            break;
+                        case 'withdrawal':
+                            typeBadge = '<span class="badge badge-warning">Withdrawal</span>';
+                            break;
+                        case 'investment':
+                            typeBadge = '<span class="badge badge-primary">Investment</span>';
+                            break;
+                        case 'commission':
+                            typeBadge = '<span class="badge badge-info">Commission</span>';
+                            break;
+                        case 'bonus':
+                            typeBadge = '<span class="badge badge-success">Bonus</span>';
+                            break;
+                        default:
+                            typeBadge = '<span class="badge">' + transaction.type + '</span>';
+                    }
+                    
+                    html += `
+                        <tr>
+                            <td>${transaction.userName}</td>
+                            <td>${typeBadge}</td>
+                            <td>${amount} USDT</td>
+                            <td>${transaction.description || ''}</td>
+                            <td>${date}</td>
+                            <td>${statusBadge}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableBody.innerHTML = html;
+            });
+        }
+
+        function exportTransactions() {
+            // In a real implementation, this would generate a CSV or Excel file
+            showNotification('Transaction export feature would generate a file here', 'info');
         }
 
         // ====================
         // INVESTMENT PLANS MANAGEMENT
         // ====================
-        function loadPlans() {
+        function loadInvestmentPlans() {
             database.ref('public/plans').once('value').then(snapshot => {
                 const plans = snapshot.val() || {};
-                const plansTable = document.getElementById('plansTable');
+                const tableBody = document.getElementById('plansTable');
                 
                 if (Object.keys(plans).length === 0) {
-                    plansTable.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">No plans found</td></tr>';
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <i class="fas fa-chart-line"></i>
+                                <div>No investment plans found</div>
+                            </td>
+                        </tr>
+                    `;
                     return;
                 }
                 
                 let html = '';
                 Object.entries(plans).forEach(([id, plan]) => {
                     const totalReturn = (plan.dailyReturn * plan.days).toFixed(0);
+                    const statusBadge = plan.status === 'active' 
+                        ? '<span class="badge badge-success">Active</span>'
+                        : '<span class="badge badge-warning">Inactive</span>';
+                    
                     html += `
                         <tr>
                             <td><strong>${plan.name}</strong></td>
@@ -1114,33 +2797,34 @@
                             <td>${plan.dailyReturn}%</td>
                             <td>${plan.days}</td>
                             <td>${totalReturn}%</td>
-                            <td><span class="badge ${plan.status === 'active' ? 'badge-success' : 'badge-warning'}">${plan.status}</span></td>
+                            <td>${statusBadge}</td>
                             <td>
-                                <button class="btn btn-small" onclick="editPlan('${id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-danger btn-small" onclick="deletePlan('${id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm" onclick="editPlan('${id}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="deletePlan('${id}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     `;
                 });
                 
-                plansTable.innerHTML = html;
+                tableBody.innerHTML = html;
             });
         }
 
         function openPlanModal(planId = null) {
             currentPlanId = planId;
             const modal = document.getElementById('planModal');
-            const title = document.querySelector('#planModal h2');
+            const title = document.getElementById('planModalTitle');
             const saveBtn = document.getElementById('savePlanBtn');
             
             if (planId) {
-                // Edit existing plan
-                title.innerHTML = '<i class="fas fa-edit"></i> Edit Investment Plan';
-                saveBtn.textContent = 'Update Plan';
+                title.textContent = 'Edit Investment Plan';
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Update Plan';
                 
                 database.ref(`public/plans/${planId}`).once('value').then(snapshot => {
                     const plan = snapshot.val();
@@ -1155,9 +2839,8 @@
                     }
                 });
             } else {
-                // Add new plan
-                title.innerHTML = '<i class="fas fa-plus"></i> Add New Investment Plan';
-                saveBtn.textContent = 'Add Plan';
+                title.textContent = 'Add New Investment Plan';
+                saveBtn.innerHTML = '<i class="fas fa-plus"></i> Add Plan';
                 
                 // Reset form
                 document.getElementById('planName').value = '';
@@ -1205,7 +2888,7 @@
                 .then(() => {
                     showNotification(`Plan ${currentPlanId ? 'updated' : 'added'} successfully!`, 'success');
                     closeModal('planModal');
-                    loadPlans();
+                    loadInvestmentPlans();
                 })
                 .catch(error => {
                     showNotification('Error: ' + error.message, 'error');
@@ -1221,7 +2904,7 @@
                 database.ref(`public/plans/${planId}`).remove()
                     .then(() => {
                         showNotification('Plan deleted successfully!', 'success');
-                        loadPlans();
+                        loadInvestmentPlans();
                     })
                     .catch(error => {
                         showNotification('Error: ' + error.message, 'error');
@@ -1232,51 +2915,63 @@
         // ====================
         // LEADERSHIP REWARDS MANAGEMENT
         // ====================
-        function loadRewards() {
+        function loadLeadershipRewards() {
             database.ref('public/rewards').once('value').then(snapshot => {
                 const rewards = snapshot.val() || {};
-                const rewardsTable = document.getElementById('rewardsTable');
+                const tableBody = document.getElementById('rewardsTable');
                 
                 if (Object.keys(rewards).length === 0) {
-                    rewardsTable.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No rewards found</td></tr>';
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <i class="fas fa-trophy"></i>
+                                <div>No leadership rewards found</div>
+                            </td>
+                        </tr>
+                    `;
                     return;
                 }
                 
                 let html = '';
                 Object.entries(rewards).forEach(([id, reward]) => {
+                    const statusBadge = reward.status === 'active' 
+                        ? '<span class="badge badge-success">Active</span>'
+                        : '<span class="badge badge-warning">Inactive</span>';
+                    
                     html += `
                         <tr>
                             <td><strong>${reward.name}</strong></td>
                             <td>$${reward.selfBusiness}</td>
                             <td>$${reward.teamBusiness}</td>
-                            <td>${reward.type}</td>
-                            <td><span class="badge ${reward.status === 'active' ? 'badge-success' : 'badge-warning'}">${reward.status}</span></td>
+                            <td><span class="badge badge-info">${reward.type}</span></td>
+                            <td>${statusBadge}</td>
                             <td>
-                                <button class="btn btn-small" onclick="editReward('${id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-danger btn-small" onclick="deleteReward('${id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm" onclick="editReward('${id}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteReward('${id}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     `;
                 });
                 
-                rewardsTable.innerHTML = html;
+                tableBody.innerHTML = html;
             });
         }
 
         function openRewardModal(rewardId = null) {
             currentRewardId = rewardId;
             const modal = document.getElementById('rewardModal');
-            const title = document.querySelector('#rewardModal h2');
+            const title = document.getElementById('rewardModalTitle');
             const saveBtn = document.getElementById('saveRewardBtn');
             
             if (rewardId) {
-                // Edit existing reward
-                title.innerHTML = '<i class="fas fa-edit"></i> Edit Leadership Reward';
-                saveBtn.textContent = 'Update Reward';
+                title.textContent = 'Edit Leadership Reward';
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Update Reward';
                 
                 database.ref(`public/rewards/${rewardId}`).once('value').then(snapshot => {
                     const reward = snapshot.val();
@@ -1289,9 +2984,8 @@
                     }
                 });
             } else {
-                // Add new reward
-                title.innerHTML = '<i class="fas fa-gift"></i> Add New Leadership Reward';
-                saveBtn.textContent = 'Add Reward';
+                title.textContent = 'Add New Leadership Reward';
+                saveBtn.innerHTML = '<i class="fas fa-plus"></i> Add Reward';
                 
                 // Reset form
                 document.getElementById('rewardName').value = '';
@@ -1330,7 +3024,7 @@
                 .then(() => {
                     showNotification(`Reward ${currentRewardId ? 'updated' : 'added'} successfully!`, 'success');
                     closeModal('rewardModal');
-                    loadRewards();
+                    loadLeadershipRewards();
                 })
                 .catch(error => {
                     showNotification('Error: ' + error.message, 'error');
@@ -1346,7 +3040,7 @@
                 database.ref(`public/rewards/${rewardId}`).remove()
                     .then(() => {
                         showNotification('Reward deleted successfully!', 'success');
-                        loadRewards();
+                        loadLeadershipRewards();
                     })
                     .catch(error => {
                         showNotification('Error: ' + error.message, 'error');
@@ -1360,10 +3054,9 @@
         function loadCommissionLevels() {
             database.ref('public/commissionSettings').once('value').then(snapshot => {
                 const settings = snapshot.val() || {};
-                const formDiv = document.getElementById('commissionLevelsForm');
+                const grid = document.getElementById('commissionLevelsGrid');
                 
-                let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">';
-                
+                let html = '';
                 for (let level = 1; level <= 9; level++) {
                     const defaultValue = 
                         level === 1 ? 8 :
@@ -1378,38 +3071,36 @@
                     const value = settings[`level${level}`] || defaultValue;
                     
                     html += `
-                        <div class="form-group">
-                            <label>Level ${level} Commission (%)</label>
-                            <input type="number" class="form-control commission-input" 
-                                   id="level${level}" 
-                                   min="0" max="100" step="0.1"
-                                   value="${value}">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
+                            <div class="stat-value">Level ${level}</div>
+                            <div class="form-group" style="margin-top: 1rem;">
+                                <input type="number" 
+                                       class="form-control commission-level-input" 
+                                       data-level="${level}"
+                                       min="0" max="100" step="0.1"
+                                       value="${value}">
+                            </div>
+                            <div class="stat-title">Commission Percentage</div>
                         </div>
                     `;
                 }
                 
-                html += '</div>';
-                html += `
-                    <div style="margin-top: 2rem;">
-                        <button class="btn btn-success" onclick="saveCommissionLevels()">
-                            <i class="fas fa-save"></i> Save Commission Settings
-                        </button>
-                    </div>
-                `;
-                
-                formDiv.innerHTML = html;
+                grid.innerHTML = html;
             });
         }
 
         function saveCommissionLevels() {
+            const inputs = document.querySelectorAll('.commission-level-input');
             const updates = {};
             
-            for (let level = 1; level <= 9; level++) {
-                const input = document.getElementById(`level${level}`);
-                if (input) {
-                    updates[`level${level}`] = parseFloat(input.value) || 0;
-                }
-            }
+            inputs.forEach(input => {
+                const level = input.getAttribute('data-level');
+                const value = parseFloat(input.value) || 0;
+                updates[`level${level}`] = value;
+            });
             
             database.ref('public/commissionSettings').update(updates)
                 .then(() => {
@@ -1421,249 +3112,56 @@
         }
 
         // ====================
-        // DEPOSIT REQUESTS MANAGEMENT
-        // ====================
-        function loadDepositRequests(status = 'pending') {
-            database.ref('depositRequests').once('value').then(snapshot => {
-                const requests = snapshot.val() || {};
-                const depositsTable = document.getElementById('depositsTable');
-                
-                // Filter by status
-                const filteredRequests = Object.entries(requests)
-                    .filter(([id, request]) => request.status === status)
-                    .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
-                
-                if (filteredRequests.length === 0) {
-                    depositsTable.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem;">No ${status} deposit requests</td></tr>`;
-                    return;
-                }
-                
-                let html = '';
-                filteredRequests.forEach(([id, request]) => {
-                    const date = new Date(request.timestamp).toLocaleString();
-                    html += `
-                        <tr>
-                            <td>${request.userName}</td>
-                            <td>${request.amount} USDT</td>
-                            <td>${date}</td>
-                            <td><span class="badge ${getStatusBadge(request.status)}">${request.status}</span></td>
-                            <td>
-                                ${status === 'pending' ? `
-                                    <button class="btn btn-success btn-small" onclick="approveDeposit('${id}')">
-                                        <i class="fas fa-check"></i> Approve
-                                    </button>
-                                    <button class="btn btn-danger btn-small" onclick="rejectDeposit('${id}')">
-                                        <i class="fas fa-times"></i> Reject
-                                    </button>
-                                ` : ''}
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                depositsTable.innerHTML = html;
-            });
-        }
-
-        function approveDeposit(requestId) {
-            if (confirm('Approve this deposit request?')) {
-                database.ref(`depositRequests/${requestId}`).once('value').then(snapshot => {
-                    const request = snapshot.val();
-                    
-                    // Update deposit request status
-                    database.ref(`depositRequests/${requestId}`).update({
-                        status: 'completed',
-                        approvedAt: new Date().toISOString(),
-                        approvedBy: 'Admin'
-                    });
-                    
-                    // Update user balance
-                    database.ref(`users/${request.userId}`).once('value').then(userSnapshot => {
-                        const user = userSnapshot.val();
-                        const newBalance = (user.balance || 0) + request.amount;
-                        
-                        database.ref(`users/${request.userId}`).update({
-                            balance: newBalance
-                        });
-                        
-                        // Add transaction to user
-                        const userTransactions = user.transactions || [];
-                        userTransactions.push({
-                            type: 'deposit',
-                            amount: request.amount,
-                            description: 'Deposit Approved',
-                            status: 'completed',
-                            timestamp: new Date().toISOString()
-                        });
-                        
-                        database.ref(`users/${request.userId}/transactions`).set(userTransactions);
-                    });
-                    
-                    showNotification('Deposit approved successfully!', 'success');
-                    loadDepositRequests('pending');
-                    loadDashboard();
-                });
-            }
-        }
-
-        function rejectDeposit(requestId) {
-            if (confirm('Reject this deposit request?')) {
-                database.ref(`depositRequests/${requestId}`).update({
-                    status: 'rejected',
-                    rejectedAt: new Date().toISOString(),
-                    rejectedBy: 'Admin'
-                })
-                .then(() => {
-                    showNotification('Deposit request rejected!', 'success');
-                    loadDepositRequests('pending');
-                });
-            }
-        }
-
-        // ====================
-        // WITHDRAWAL REQUESTS MANAGEMENT
-        // ====================
-        function loadWithdrawalRequests(status = 'pending') {
-            database.ref('withdrawalRequests').once('value').then(snapshot => {
-                const requests = snapshot.val() || {};
-                const withdrawalsTable = document.getElementById('withdrawalsTable');
-                
-                // Filter by status
-                const filteredRequests = Object.entries(requests)
-                    .filter(([id, request]) => request.status === status)
-                    .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
-                
-                if (filteredRequests.length === 0) {
-                    withdrawalsTable.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2rem;">No ${status} withdrawal requests</td></tr>`;
-                    return;
-                }
-                
-                let html = '';
-                filteredRequests.forEach(([id, request]) => {
-                    const date = new Date(request.timestamp).toLocaleString();
-                    html += `
-                        <tr>
-                            <td>${request.userName}</td>
-                            <td>${request.amount} USDT</td>
-                            <td>${request.fee} USDT</td>
-                            <td>${request.netAmount} USDT</td>
-                            <td style="font-size: 0.9rem;">${request.walletAddress.substring(0, 10)}...${request.walletAddress.substring(request.walletAddress.length - 10)}</td>
-                            <td>${date}</td>
-                            <td><span class="badge ${getStatusBadge(request.status)}">${request.status}</span></td>
-                            <td>
-                                ${status === 'pending' ? `
-                                    <button class="btn btn-success btn-small" onclick="approveWithdrawal('${id}')">
-                                        <i class="fas fa-check"></i> Approve
-                                    </button>
-                                    <button class="btn btn-danger btn-small" onclick="rejectWithdrawal('${id}')">
-                                        <i class="fas fa-times"></i> Reject
-                                    </button>
-                                ` : ''}
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                withdrawalsTable.innerHTML = html;
-            });
-        }
-
-        function approveWithdrawal(requestId) {
-            if (confirm('Approve this withdrawal request?')) {
-                database.ref(`withdrawalRequests/${requestId}`).once('value').then(snapshot => {
-                    const request = snapshot.val();
-                    
-                    // Update withdrawal request status
-                    database.ref(`withdrawalRequests/${requestId}`).update({
-                        status: 'completed',
-                        approvedAt: new Date().toISOString(),
-                        approvedBy: 'Admin'
-                    });
-                    
-                    // Update user total withdrawn
-                    database.ref(`users/${request.userId}`).once('value').then(userSnapshot => {
-                        const user = userSnapshot.val();
-                        const newTotalWithdrawn = (user.totalWithdrawn || 0) + request.amount;
-                        
-                        database.ref(`users/${request.userId}`).update({
-                            totalWithdrawn: newTotalWithdrawn
-                        });
-                        
-                        // Add transaction to user
-                        const userTransactions = user.transactions || [];
-                        userTransactions.push({
-                            type: 'withdrawal',
-                            amount: request.amount,
-                            description: 'Withdrawal Approved',
-                            status: 'completed',
-                            fee: request.fee,
-                            netAmount: request.netAmount,
-                            timestamp: new Date().toISOString()
-                        });
-                        
-                        database.ref(`users/${request.userId}/transactions`).set(userTransactions);
-                    });
-                    
-                    showNotification('Withdrawal approved successfully!', 'success');
-                    loadWithdrawalRequests('pending');
-                    loadDashboard();
-                });
-            }
-        }
-
-        function rejectWithdrawal(requestId) {
-            if (confirm('Reject this withdrawal request?')) {
-                database.ref(`withdrawalRequests/${requestId}`).once('value').then(snapshot => {
-                    const request = snapshot.val();
-                    
-                    // Refund amount to user balance
-                    database.ref(`users/${request.userId}`).once('value').then(userSnapshot => {
-                        const user = userSnapshot.val();
-                        const newBalance = (user.balance || 0) + request.amount;
-                        
-                        database.ref(`users/${request.userId}`).update({
-                            balance: newBalance
-                        });
-                    });
-                    
-                    // Update withdrawal request status
-                    database.ref(`withdrawalRequests/${requestId}`).update({
-                        status: 'rejected',
-                        rejectedAt: new Date().toISOString(),
-                        rejectedBy: 'Admin'
-                    })
-                    .then(() => {
-                        showNotification('Withdrawal request rejected and amount refunded!', 'success');
-                        loadWithdrawalRequests('pending');
-                    });
-                });
-            }
-        }
-
-        // ====================
         // SYSTEM SETTINGS
         // ====================
         function loadSystemSettings() {
             database.ref('publicSettings').once('value').then(snapshot => {
                 const settings = snapshot.val() || {};
                 
-                document.getElementById('minDeposit').value = settings.minDeposit || 1;
+                // Deposit settings
+                document.getElementById('minDeposit').value = settings.minDeposit || 5;
                 document.getElementById('maxDeposit').value = settings.maxDeposit || 5000;
                 document.getElementById('depositAddress').value = settings.depositWallet || '';
+                
+                // Withdrawal settings
                 document.getElementById('minWithdrawal').value = settings.minWithdrawal || 1;
                 document.getElementById('withdrawalFee').value = settings.withdrawalFee || 12;
                 document.getElementById('dailyBonus').value = settings.dailyBonus || 0.01;
+                
+                // Notification settings
+                document.getElementById('emailNotifications').checked = settings.emailNotifications !== false;
+                document.getElementById('smsNotifications').checked = settings.smsNotifications === true;
+                document.getElementById('adminEmailSettings').value = settings.adminEmail || '';
+                
+                // Security settings
+                document.getElementById('twoFactorAuth').value = settings.twoFactorAuth || 'enabled';
+                document.getElementById('sessionTimeout').value = settings.sessionTimeout || 30;
+                document.getElementById('ipWhitelist').value = settings.ipWhitelist || '';
             });
         }
 
         function saveSystemSettings() {
             const settings = {
+                // Deposit settings
                 minDeposit: parseFloat(document.getElementById('minDeposit').value),
                 maxDeposit: parseFloat(document.getElementById('maxDeposit').value),
                 depositWallet: document.getElementById('depositAddress').value.trim(),
+                
+                // Withdrawal settings
                 minWithdrawal: parseFloat(document.getElementById('minWithdrawal').value),
                 withdrawalFee: parseFloat(document.getElementById('withdrawalFee').value),
                 dailyBonus: parseFloat(document.getElementById('dailyBonus').value),
+                
+                // Notification settings
+                emailNotifications: document.getElementById('emailNotifications').checked,
+                smsNotifications: document.getElementById('smsNotifications').checked,
+                adminEmail: document.getElementById('adminEmailSettings').value.trim(),
+                
+                // Security settings
+                twoFactorAuth: document.getElementById('twoFactorAuth').value,
+                sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
+                ipWhitelist: document.getElementById('ipWhitelist').value.trim(),
+                
                 updatedAt: new Date().toISOString()
             };
             
@@ -1677,237 +3175,6 @@
         }
 
         // ====================
-        // ALL USERS MANAGEMENT
-        // ====================
-        function loadAllUsers() {
-            database.ref('users').once('value').then(snapshot => {
-                const users = snapshot.val() || {};
-                const usersTable = document.getElementById('usersTable');
-                
-                if (Object.keys(users).length === 0) {
-                    usersTable.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">No users found</td></tr>';
-                    return;
-                }
-                
-                let html = '';
-                Object.entries(users).forEach(([id, user]) => {
-                    const joinDate = new Date(user.joinDate).toLocaleDateString();
-                    html += `
-                        <tr>
-                            <td><strong>${user.name}</strong></td>
-                            <td>${user.email}</td>
-                            <td><code>${user.referralCode}</code></td>
-                            <td>${user.balance ? user.balance.toFixed(2) : '0.00'} USDT</td>
-                            <td>${user.directReferrals || 0}</td>
-                            <td>${joinDate}</td>
-                            <td>
-                                <button class="btn btn-small" onclick="viewUserDetails('${id}')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-warning btn-small" onclick="editUser('${id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                usersTable.innerHTML = html;
-            });
-        }
-
-        function searchUsers() {
-            const query = document.getElementById('searchUsers').value.toLowerCase();
-            if (!query) {
-                loadAllUsers();
-                return;
-            }
-            
-            database.ref('users').once('value').then(snapshot => {
-                const users = snapshot.val() || {};
-                const usersTable = document.getElementById('usersTable');
-                
-                const filteredUsers = Object.entries(users).filter(([id, user]) => 
-                    user.name.toLowerCase().includes(query) ||
-                    user.email.toLowerCase().includes(query) ||
-                    user.referralCode.toLowerCase().includes(query)
-                );
-                
-                if (filteredUsers.length === 0) {
-                    usersTable.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">No users found</td></tr>';
-                    return;
-                }
-                
-                let html = '';
-                filteredUsers.forEach(([id, user]) => {
-                    const joinDate = new Date(user.joinDate).toLocaleDateString();
-                    html += `
-                        <tr>
-                            <td><strong>${user.name}</strong></td>
-                            <td>${user.email}</td>
-                            <td><code>${user.referralCode}</code></td>
-                            <td>${user.balance ? user.balance.toFixed(2) : '0.00'} USDT</td>
-                            <td>${user.directReferrals || 0}</td>
-                            <td>${joinDate}</td>
-                            <td>
-                                <button class="btn btn-small" onclick="viewUserDetails('${id}')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-warning btn-small" onclick="editUser('${id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                usersTable.innerHTML = html;
-            });
-        }
-
-        function viewUserDetails(userId) {
-            database.ref(`users/${userId}`).once('value').then(snapshot => {
-                const user = snapshot.val();
-                if (user) {
-                    const details = `
-                        User Details:
-                        
-                        Name: ${user.name}
-                        Email: ${user.email}
-                        Phone: ${user.phone || 'N/A'}
-                        Join Date: ${new Date(user.joinDate).toLocaleString()}
-                        Balance: ${user.balance ? user.balance.toFixed(2) : '0.00'} USDT
-                        Total Earnings: ${user.totalEarnings ? user.totalEarnings.toFixed(2) : '0.00'} USDT
-                        Total Withdrawn: ${user.totalWithdrawn ? user.totalWithdrawn.toFixed(2) : '0.00'} USDT
-                        Self Business: ${user.selfBusiness ? user.selfBusiness.toFixed(2) : '0.00'} USDT
-                        Team Business: ${user.teamBusiness ? user.teamBusiness.toFixed(2) : '0.00'} USDT
-                        Referral Code: ${user.referralCode}
-                        Direct Referrals: ${user.directReferrals || 0}
-                        Total Downline: ${user.totalDownline || 0}
-                        
-                        Wallet: ${user.usdtWallet || 'N/A'}
-                    `;
-                    
-                    alert(details);
-                }
-            });
-        }
-
-        function editUser(userId) {
-            // This would open a modal for editing user details
-            alert('User edit functionality would open a modal here');
-        }
-
-        // ====================
-        // ALL TRANSACTIONS
-        // ====================
-        function loadAllTransactions() {
-            // Collect all transactions from all users
-            database.ref('users').once('value').then(snapshot => {
-                const users = snapshot.val() || {};
-                const transactionsTable = document.getElementById('transactionsTable');
-                
-                let allTransactions = [];
-                Object.entries(users).forEach(([userId, user]) => {
-                    const userTransactions = user.transactions || [];
-                    userTransactions.forEach(t => {
-                        allTransactions.push({
-                            ...t,
-                            userName: user.name,
-                            userId: userId
-                        });
-                    });
-                });
-                
-                // Sort by date (newest first)
-                allTransactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                
-                if (allTransactions.length === 0) {
-                    transactionsTable.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No transactions found</td></tr>';
-                    return;
-                }
-                
-                let html = '';
-                allTransactions.slice(0, 50).forEach(transaction => { // Show first 50
-                    const date = new Date(transaction.timestamp).toLocaleString();
-                    html += `
-                        <tr>
-                            <td>${transaction.userName}</td>
-                            <td><span class="badge ${getTypeBadge(transaction.type)}">${transaction.type}</span></td>
-                            <td>${transaction.amount} USDT</td>
-                            <td>${transaction.description || ''}</td>
-                            <td>${date}</td>
-                            <td><span class="badge ${getStatusBadge(transaction.status)}">${transaction.status}</span></td>
-                        </tr>
-                    `;
-                });
-                
-                transactionsTable.innerHTML = html;
-            });
-        }
-
-        function filterTransactions() {
-            const type = document.getElementById('filterType').value;
-            const date = document.getElementById('filterDate').value;
-            
-            database.ref('users').once('value').then(snapshot => {
-                const users = snapshot.val() || {};
-                const transactionsTable = document.getElementById('transactionsTable');
-                
-                let allTransactions = [];
-                Object.entries(users).forEach(([userId, user]) => {
-                    const userTransactions = user.transactions || [];
-                    userTransactions.forEach(t => {
-                        allTransactions.push({
-                            ...t,
-                            userName: user.name,
-                            userId: userId
-                        });
-                    });
-                });
-                
-                // Apply filters
-                let filteredTransactions = allTransactions;
-                
-                if (type) {
-                    filteredTransactions = filteredTransactions.filter(t => t.type === type);
-                }
-                
-                if (date) {
-                    const filterDate = new Date(date).toDateString();
-                    filteredTransactions = filteredTransactions.filter(t => 
-                        new Date(t.timestamp).toDateString() === filterDate
-                    );
-                }
-                
-                // Sort by date (newest first)
-                filteredTransactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                
-                if (filteredTransactions.length === 0) {
-                    transactionsTable.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No transactions found</td></tr>';
-                    return;
-                }
-                
-                let html = '';
-                filteredTransactions.slice(0, 50).forEach(transaction => {
-                    const date = new Date(transaction.timestamp).toLocaleString();
-                    html += `
-                        <tr>
-                            <td>${transaction.userName}</td>
-                            <td><span class="badge ${getTypeBadge(transaction.type)}">${transaction.type}</span></td>
-                            <td>${transaction.amount} USDT</td>
-                            <td>${transaction.description || ''}</td>
-                            <td>${date}</td>
-                            <td><span class="badge ${getStatusBadge(transaction.status)}">${transaction.status}</span></td>
-                        </tr>
-                    `;
-                });
-                
-                transactionsTable.innerHTML = html;
-            });
-        }
-
-        // ====================
         // UTILITY FUNCTIONS
         // ====================
         function closeModal(modalId) {
@@ -1916,93 +3183,37 @@
             currentRewardId = null;
         }
 
-        function getStatusBadge(status) {
-            switch(status) {
-                case 'completed':
-                case 'active':
-                    return 'badge-success';
-                case 'pending':
-                    return 'badge-warning';
-                case 'rejected':
-                case 'inactive':
-                    return 'badge-danger';
-                default:
-                    return '';
-            }
-        }
-
-        function getTypeBadge(type) {
-            switch(type) {
-                case 'deposit':
-                    return 'badge-success';
-                case 'withdrawal':
-                    return 'badge-warning';
-                case 'investment':
-                    return '';
-                case 'commission':
-                    return 'badge-success';
-                case 'bonus':
-                    return 'badge-success';
-                default:
-                    return '';
-            }
+        function closeAllModals() {
+            document.querySelectorAll('.modal.active').forEach(modal => {
+                modal.classList.remove('active');
+            });
         }
 
         function showNotification(message, type) {
-            // Create notification element
+            const container = document.getElementById('notificationContainer');
             const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 1rem 1.5rem;
-                background: ${type === 'success' ? '#00ff88' : '#ff375f'};
-                color: ${type === 'success' ? '#0a0a1a' : 'white'};
-                border-radius: 8px;
-                z-index: 3000;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                animation: slideIn 0.3s ease;
-            `;
-            
+            notification.className = `notification ${type}`;
             notification.innerHTML = `
                 <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-                ${message}
+                <div>${message}</div>
             `;
             
-            document.body.appendChild(notification);
+            container.appendChild(notification);
             
-            // Remove after 3 seconds
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 10);
+            
+            // Remove after 5 seconds
             setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease';
+                notification.classList.remove('show');
                 setTimeout(() => notification.remove(), 300);
-            }, 3000);
+            }, 5000);
         }
 
-        // Add CSS for animations
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-            .loader-small {
-                width: 30px;
-                height: 30px;
-                border: 3px solid rgba(0,255,136,0.3);
-                border-top-color: var(--secondary);
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-                margin: 0 auto;
-            }
-            @keyframes spin {
-                to { transform: rotate(360deg); }
-            }
-        `;
-        document.head.appendChild(style);
+        // ====================
+        // INITIALIZATION COMPLETE
+        // ====================
+        console.log('Admin panel initialized successfully');
     </script>
 </body>
 </html>
